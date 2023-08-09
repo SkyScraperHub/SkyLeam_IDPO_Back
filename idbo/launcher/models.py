@@ -20,5 +20,8 @@ class Session(models.Model):
     # Описание сценария
     scenario = models.TextField(verbose_name='Сценарий')
 
+    # Результат сессии (целое число)
+    result = models.IntegerField(verbose_name='Результат')
+
     def __str__(self):
         return f"Сессия {self.id} для {self.FK_user} ({self.date} {self.time})"
