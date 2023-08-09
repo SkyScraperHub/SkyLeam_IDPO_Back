@@ -42,6 +42,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # Флаг, указывающий, является ли пользователь администратором
     is_administrator = models.BooleanField(default=False, verbose_name='Администратор')
+
+    # Поле для фотографии пользователя
+    image_field = models.ImageField(upload_to='user_images/', blank=True, null=True, verbose_name='Фото')
     
     # Флаг активности пользователя
     is_active = models.BooleanField(default=True, verbose_name='Активный')
