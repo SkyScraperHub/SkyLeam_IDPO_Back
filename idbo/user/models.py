@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from .manager import CustomUserManager
 
 # Создаем модель пользователя, наследуясь от AbstractBaseUser и PermissionsMixin
 class User(AbstractBaseUser, PermissionsMixin):
@@ -42,12 +43,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # Флаг, указывающий, является ли пользователь администратором
     is_administrator = models.BooleanField(default=False, verbose_name='Администратор')
-
-    # Поле для фотографии пользователя
-    image_field = models.ImageField(upload_to='user_images/', blank=True, null=True, verbose_name='Фото')
     
     # Флаг активности пользователя
     is_active = models.BooleanField(default=True, verbose_name='Активный')
+    
+    is_staff = models.BooleanField(default=True)
 
     # Дата и время присоединения пользователя
     date_joined = models.DateTimeField(auto_now_add=True, verbose_name='Дата присоединения')
@@ -61,3 +61,5 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Метод для представления пользователя в виде строки
     def __str__(self):
         return f"{self.last_name} {self.first_name} ({self.login})"
+    
+    objects = CustomUserManager()
