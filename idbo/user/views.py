@@ -1,45 +1,46 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import authenticate
-from rest_framework_jwt.settings import api_settings
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .models import User
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
-class StudentLoginView(APIView):
+# Кастомный класс для получения токена доступа
+class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
-        login1 = request.data.get('login')
-        password1 = request.data.get('password')
+        serializer = self.get_serializer(data=request.data)
+        
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.user
+            # Проверка, что пользователь - студент
+            if user.position != 'student':
+                return Response(
+                    {"details": "Only students can log in"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+            tokens = serializer.validated_data
+            
+            return Response(
+                {
+                    "access": tokens["access"],
+                    "refresh": tokens["refresh"],
+                },
+                status=status.HTTP_200_OK,
+            )
 
-        user = User.objects.get(login=str(login1)[1:-1], password = str(password1)[1:-1])
 
-        if user and user.position == 'student':
-            jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-            jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+# Проверка наличия аутентификации и разрешения у пользователя
+class CheckUser(APIView):
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (JWTAuthentication,)
 
-            payload = jwt_payload_handler(user)
-            token = jwt_encode_handler(payload)
-
-            return Response({'token': token})
-        else:
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-    
-    
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         try:
-            login1 = self.request.query_params['login']
-            password1 = self.request.query_params['password']
-            user = User.objects.get(login=str(login1)[1:-1], password = str(password1)[1:-1])
-
-            if user and user.position == 'student':
-                jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-                jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-
-                payload = jwt_payload_handler(user)
-                token = jwt_encode_handler(payload)
-
-                return Response({'token': token})
+            user = request.user
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            if type(e).__name__ == "InvalidToken":
+                return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
             else:
-                return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        except KeyError:
-            raise AuthenticationFailed('Invalid data. Provide both "login" and "password" parameters.')
+                return Response({"error": "Something went wrong"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
