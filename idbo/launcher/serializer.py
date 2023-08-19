@@ -5,13 +5,13 @@ from .models import Session
 
 
 class SessionAddSerializer(serializers.ModelSerializer):
-    user_id = serializers.UUIDField(write_only=True)
+    # FK_user = serializers.IntegerField(write_only=True)
     # uuid = serializers.UUIDField(read_only = True)
-    date = serializers.DateTimeField(format="%Y.%m.%d %H:%M:%S")
-    duration = serializers.DurationField()
+    date = serializers.DateField(format="%Y.%m.%d")
+    time = serializers.TimeField(format="%H:%M:%S")
     class Meta:
         model = Session
-        fields = ("date", "time", "scenario", "result","FK_user")
+        fields = ("date", "time", "scenario", "result","FK_user", "video")
     
 class SessionSerializer(serializers.ModelSerializer):
     
@@ -21,4 +21,4 @@ class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Session
        
-        fields = ("id","date", "time", "scenario")
+        fields = ("id","date", "time", "scenario", "result")
