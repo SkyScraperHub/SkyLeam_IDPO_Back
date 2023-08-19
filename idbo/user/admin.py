@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-
-
 from .models import User
+from .forms import StudentAdminForm
 
 
 
@@ -13,7 +12,8 @@ class UserAdmin(User):
 @admin.register(UserAdmin)
 class CustomUserAdmin(admin.ModelAdmin):
     model = UserAdmin
-    list_display = ('last_name', 'first_name', 'email', 'position', 'is_administrator', 'is_active')
+    form = StudentAdminForm
+    list_display = ('last_name', 'first_name', 'email', 'position')
     list_filter = ('position', 'is_administrator', 'is_active')
     # fieldsets = (
     #     (None, {'fields': ('last_name', 'first_name', 'middle_name', 'phone_number', 'email', 'login', 'password', 'fk_user', 'position', 'is_administrator', 'image_field')}),

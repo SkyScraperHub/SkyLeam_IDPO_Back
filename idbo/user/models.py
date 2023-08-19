@@ -12,7 +12,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     # Поле для уникального идентификатора пользователя
-    id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True, auto_created=True)
 
     # Фамилия пользователя
     last_name = models.CharField(max_length=100, verbose_name='Фамилия')
