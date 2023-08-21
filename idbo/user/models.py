@@ -12,7 +12,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     # Поле для уникального идентификатора пользователя
-    id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True, auto_created=True)
 
     # Фамилия пользователя
     last_name = models.CharField(max_length=100, verbose_name='Фамилия')
@@ -36,7 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=128, verbose_name='Пароль')
 
     # Внешний ключ на родительского пользователя (связь с самим собой)
-    fk_user = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, verbose_name='Родительский пользователь')
+    fk_user = models.ForeignKey('self', on_delete=models.CASCADE, default=None, null=True, verbose_name='Родительский пользователь')
 
     # Выбор должности пользователя из списка POSITION_CHOICES
     position = models.CharField(max_length=20, choices=POSITION_CHOICES, verbose_name='Должность')

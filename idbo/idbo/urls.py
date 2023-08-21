@@ -16,12 +16,26 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view as swagger_get_schema_view
+
+schema_view = swagger_get_schema_view(
+    openapi.Info(
+        title = "API",
+        default_version = "0.5",
+        description = "Api documentation of App",
+    ),
+    public = True,
+    # permission_classes=[permissions.AllowAny]
+)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     path("api/", include(
             [
             path("", include("user.urls")),
+            path("", include("launcher.urls")),
+            path("docs", schema_view().with_ui("swagger", cache_timeout=0)),
             ])
         ),
     

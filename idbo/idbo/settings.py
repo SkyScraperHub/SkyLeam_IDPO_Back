@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-
+import dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,11 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-d=!atf!stit@)4#o6k61xp$z#k3hx%&@dx*x6++-p4ramlv^5i'
+# SECURITY WARNING: keep the secret key used in production secret
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+if DEBUG:
+    dotenv.load_dotenv(dotenv.find_dotenv(".env.dev"))
+else:
+    dotenv.load_dotenv(dotenv.find_dotenv(".env"))
 
 ALLOWED_HOSTS = []
 
@@ -35,6 +39,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 # Application definition
+SECRET_KEY = os.getenv("SECRET_KEY")
+print(SECRET_KEY)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -45,11 +51,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "rest_framework",
     "rest_framework_simplejwt",
-    "rest_framework.decorators",
-    "rest_framework.response",
-    'debug_toolbar',
     'user',
     'launcher',
+    "drf_yasg",
+    "minio_storage",
+    "psycopg2"
 ]
 
 MIDDLEWARE = [
@@ -107,15 +113,15 @@ if not DEBUG:
 
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
 
-            'NAME': "sky_db",
+            'NAME': os.getenv("DB_NAME"),
 
-            'USER': 'postgres_sa',
+            'USER': os.getenv("DB_USER"),
 
-            'PASSWORD': '8_UfG^S^85u7Ml',
+            'PASSWORD': os.getenv("DB_PASSWORD"),
 
-            'HOST': '192.168.1.216',
+            'HOST': os.getenv("DB_HOST"),
 
-            'PORT': '49051',
+            'PORT': os.getenv("PORT"),
 
         }
 
@@ -163,7 +169,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -209,3 +214,17 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
+
+STATIC_URL = '/static/'
+STATIC_ROOT = './static_files/'
+
+DEFAULT_FILE_STORAGE = "minio_storage.storage.MinioMediaStorage"
+STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
+MINIO_STORAGE_ACCESS_KEY = os.getenv("MINIO_ACCESS")
+MINIO_STORAGE_SECRET_KEY = os.getenv("MINIO_SECRET")
+MINIO_STORAGE_ENDPOINT = os.getenv("MINIO_STORAGE_ENDPOINT")
+MINIO_STORAGE_USE_HTTPS = True
+MINIO_STORAGE_MEDIA_BUCKET_NAME = os.getenv("MINIO_BUCKET_STATIC")
+MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True
+MINIO_STORAGE_STATIC_BUCKET_NAME = os.getenv("MINIO_BUCKET_MEDIA")
+MINIO_STORAGE_AUTO_CREATE_STATIC_BUCKET = True
