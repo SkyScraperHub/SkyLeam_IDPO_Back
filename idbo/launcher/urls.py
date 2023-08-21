@@ -5,5 +5,6 @@ from rest_framework import routers
 urlpatterns = [
     path('sessions', views.Session.as_view()),
     path("sessions/add", views.SessionAdd.as_view()),
-    path("sessions/report",views.DocGenerate)
+    path("sessions/report",views.DocGenerate),
+    path('session/video/<int:pk>/', views.SessionVideoView.as_view(), name='session-video'),
     ]
