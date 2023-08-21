@@ -18,6 +18,9 @@ from datetime import timedelta, datetime
 from services.s3 import MinioClient
 from rest_framework import parsers
 from utils import get_random_string
+
+from django.http import HttpResponseRedirect, HttpResponseNotFound
+from django.urls import reverse
 class SessionPagination(PageNumberPagination):
     page_size = 20
 
@@ -114,4 +117,21 @@ def DocGenerate(request):
     except FileNotFoundError:
         return HttpResponseBadRequest("File not found.")
 
+
+class SessionVideoView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def get(self, request, pk):
+        try:
+            session = Session.objects.get(pk=pk, FK_user=request.auth["id"])
+        except Session.DoesNotExist:
+            return HttpResponseBadRequest("Session not found.")
+
+        video_name = session.video
+
+        if video_name:
+            video_url = MinioClient.get_presigned_url(video_name)
+            return Response({"video_url": video_url})
+        else:
+            return HttpResponseBadRequest("Video not found.")
         
