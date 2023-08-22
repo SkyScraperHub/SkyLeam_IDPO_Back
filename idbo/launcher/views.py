@@ -18,6 +18,8 @@ from datetime import timedelta, datetime
 from services.s3 import MinioClient
 from rest_framework import parsers
 from utils import get_random_string
+from django.template import loader
+from django.http import HttpResponse
 
 from django.http import HttpResponseRedirect, HttpResponseNotFound
 from django.urls import reverse
@@ -131,7 +133,8 @@ class SessionVideoView(APIView):
 
         if video_name:
             video_url = MinioClient.get_presigned_url(video_name)
-            return Response({"video_url": video_url})
+            template = loader.get_template('video.html')
+            context = {"video_url": video_url}
+            return HttpResponse(template.render(context, request))
         else:
             return HttpResponseBadRequest("Video not found.")
-        
