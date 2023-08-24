@@ -27,7 +27,7 @@ class SessionPagination(PageNumberPagination):
     page_size = 20
 
 
-class Session(generics.ListAPIView):
+class SessionList(generics.ListAPIView):
     queryset = Session.objects.all()
     serializer_class = serializer.SessionSerializer
     permission_classes = (IsAuthenticated, )
@@ -132,7 +132,8 @@ class SessionVideoView(APIView):
         video_name = session.video
 
         if video_name:
-            video_url = MinioClient.get_presigned_url(video_name)
+            user_id = request.auth["id"]
+            video_url = MinioClient.get_presigned_url(f"{user_id}/{video_name}")
             template = loader.get_template('video.html')
             context = {"video_url": video_url}
             return HttpResponse(template.render(context, request))
