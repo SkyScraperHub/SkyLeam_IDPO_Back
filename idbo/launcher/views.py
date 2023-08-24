@@ -17,7 +17,6 @@ from datetime import datetime
 from services.s3 import MinioClient
 from rest_framework import parsers
 from utils import get_random_string
-from user.models import User
 
 class SessionPagination(PageNumberPagination):
     page_size = 20
@@ -125,6 +124,7 @@ def DocGenerate(request):
 
 class SessionVideoView(APIView):
     permission_classes = (IsAuthenticated,)
+    
 
 
     def get(self, request, pk):
@@ -147,6 +147,7 @@ class SessionVideoView(APIView):
         
 class UniqueScenariosSessionList(APIView):
     permission_classes = (IsAuthenticated, )
+    authentication_classes = (JWTAuthentication,)
 
     @swagger_auto_schema(
         operation_description='Get unique scenarios for student sessions',
@@ -155,7 +156,6 @@ class UniqueScenariosSessionList(APIView):
         ],
         responses={
             200: 'OK',
-            400: 'Bad Request',
             401: 'Unauthorized',
             500: 'Internal Server Error'
         }
@@ -166,14 +166,8 @@ class UniqueScenariosSessionList(APIView):
         if not user_id:
             return Response({"detail": "user_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            user = User.objects.get(pk=user_id, position='student')
-        except User.DoesNotExist:
-            return Response({"detail": "Student user not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        sessions = Session.objects.filter(FK_user=user)
+        unique_scenarios = Session.objects.filter(FK_user__pk=user_id).values_list('scenario', flat=True).distinct()
 
-
-        unique_scenarios = sessions.values_list('scenario', flat=True).distinct()
 
         return Response({"unique_scenarios": unique_scenarios})
