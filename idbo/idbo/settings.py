@@ -31,7 +31,7 @@ if DEBUG:
 else:
     dotenv.load_dotenv(dotenv.find_dotenv(".env"))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 AUTH_USER_MODEL = "user.User"
 
