@@ -117,6 +117,7 @@ def DocGenerate(request):
 class SessionVideoView(APIView):
     permission_classes = (IsAuthenticated,)
 
+
     def get(self, request, pk):
         try:
             session = Session.objects.get(pk=pk, FK_user=request.auth["id"])
@@ -132,4 +133,6 @@ class SessionVideoView(APIView):
             context = {"video_url": video_url}
             return HttpResponse(template.render(context, request))
         else:
+
             return HttpResponseBadRequest("Video not found.")
+
