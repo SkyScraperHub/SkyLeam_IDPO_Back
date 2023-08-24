@@ -117,6 +117,7 @@ def DocGenerate(request):
 class SessionVideoView(APIView):
     permission_classes = (IsAuthenticated,)
 
+
     def get(self, request, pk):
         try:
             session = Session.objects.get(pk=pk)
@@ -130,21 +131,4 @@ class SessionVideoView(APIView):
             return HttpResponse(template.render(context, request))
         else:
             return HttpResponseBadRequest("Video not found.")
-        
-class SessionScenario(generics.ListAPIView):
-    permission_classes = (IsAuthenticated,)
-    @authentication_classes([JWTAuthentication])
-    
-    @swagger_auto_schema(
-    operation_description='Get user sessions` scenarios',
-    responses={
-        200: openapi.Response(description='OK'),
-    }
-)
-    
-    def list(self, request):
-        try:
-            scenarios = Session.objects.filter(FK_user=request.user.id).values_list("scenario", flat=True).distinct()
-        except:
-            scenarios = []
-        return Response(data=scenarios, status=status.HTTP_200_OK)
+

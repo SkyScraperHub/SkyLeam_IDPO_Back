@@ -13,7 +13,9 @@ class MinioClient:
     @staticmethod
     def upload_data(name:str,  data, length = -1):
         S3Clinet.put_object(os.getenv("MINIO_BUCKET_MEDIA"), f'{os.getenv("MINIO_FOLDER")}/{name}',data, length)
-    
+
+        
+        
     @staticmethod
     def get_presigned_url(name: str):
         return S3Clinet.presigned_get_object(os.getenv("MINIO_BUCKET_MEDIA"), f'{os.getenv("MINIO_FOLDER")}/{name}')
