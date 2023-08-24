@@ -3,8 +3,8 @@ from . import views
 from rest_framework import routers
 
 urlpatterns = [
-    path('sessions', views.Session.as_view()),
+    path('sessions', views.SessionList.as_view()),
     path("sessions/add", views.SessionAdd.as_view()),
     path("sessions/report",views.DocGenerate),
-    path('session/video/<int:pk>/', views.SessionVideoView.as_view(), name='session-video'),
+    path('sessions/video/<int:pk>/', views.SessionVideoView.as_view(), name='session-video'),
     ]
