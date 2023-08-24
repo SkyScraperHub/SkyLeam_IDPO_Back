@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import reverse
-from django.utils.http import urlencode
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from .models import User
