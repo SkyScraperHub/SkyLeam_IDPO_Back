@@ -17,6 +17,7 @@ from datetime import datetime
 from services.s3 import MinioClient
 from rest_framework import parsers
 from utils import get_random_string
+from user.models import User
 
 class SessionPagination(PageNumberPagination):
     page_size = 20
@@ -135,4 +136,45 @@ class SessionVideoView(APIView):
         else:
 
             return HttpResponseBadRequest("Video not found.")
+        
+class UniqueScenariosSessionList(APIView):
+    permission_classes = (IsAuthenticated, )
 
+    @swagger_auto_schema(
+        operation_description='Get unique scenarios for student sessions',
+        manual_parameters=[
+            openapi.Parameter('user_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, description='Student user ID'),
+            openapi.Parameter('date', openapi.IN_QUERY, type=openapi.TYPE_STRING, description='Filter by date (YYYY-MM-DD)'),
+            openapi.Parameter('scenario', openapi.IN_QUERY, type=openapi.TYPE_STRING, description='Filter by scenario text'),
+        ],
+        responses={
+            200: 'OK',
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            500: 'Internal Server Error'
+        }
+    )
+    def get(self, request):
+        user_id = request.query_params.get('user_id', None)
+        date = request.query_params.get('date', None)
+        scenario = request.query_params.get('scenario', None)
+
+        if not user_id:
+            return Response({"detail": "user_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(pk=user_id, position='student')
+        except User.DoesNotExist:
+            return Response({"detail": "Student user not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        sessions = Session.objects.filter(FK_user=user)
+
+        if date:
+            sessions = sessions.filter(date=date)
+
+        if scenario:
+            sessions = sessions.filter(scenario__icontains=scenario)
+
+        unique_scenarios = sessions.values_list('scenario', flat=True).distinct()
+
+        return Response({"unique_scenarios": unique_scenarios})
