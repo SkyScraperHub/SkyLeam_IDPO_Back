@@ -8,6 +8,7 @@ from .forms import StudentAdminForm, InstructorAdminForm, AdminAdminForm
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.views.decorators.clickjacking import xframe_options_exempt
+from services.s3 import MinioClient
 
 
 class UserAdmin(User):
@@ -22,12 +23,26 @@ class UserAdmin(User):
 class CustomUserAdmin(admin.ModelAdmin):
     model = UserAdmin
     form = AdminAdminForm
-    list_display = ('last_name', "full_name" ,'first_name', 'email', 'position')
+    list_display = ('last_name', "full_name" ,'first_name', 'email', 'position', 'profile_image_tag')
 
     def full_name(self, obj):
         return obj.middle_name+" " + obj.first_name +" "+ obj.last_name
     
     full_name.short_description = "ФИО"
+    
+    def save_model(self, request, obj, form, change):
+        # Загрузка изображения на S3
+        if 'profile_image' in request.FILES:
+            image = request.FILES['profile_image']
+            MinioClient.upload_data(image.name, image.read(), image.size)
+            obj.profile_image = image.name
+        
+        super().save_model(request, obj, form, change)
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['profile_image'].label = 'Изображение профиля'
+        return form
     
 class UserInstructor(User):
     class Meta:

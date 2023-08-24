@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .manager import CustomUserManager
+from services.s3 import MinioClient
 
 # Создаем модель пользователя, наследуясь от AbstractBaseUser и PermissionsMixin
 class User(AbstractBaseUser, PermissionsMixin):
@@ -53,11 +54,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # Дата и время присоединения пользователя
     date_joined = models.DateTimeField(auto_now_add=True, verbose_name='Дата присоединения')
+    
+    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True, verbose_name='Изображение')
 
     # Имя поля, используемое для аутентификации (логин)
     USERNAME_FIELD = 'login'
     
     def __str__(self):
         return f"{self.last_name} {self.first_name} {self.middle_name}"
+    
+    
     
     objects = CustomUserManager()
