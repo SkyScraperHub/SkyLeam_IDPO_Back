@@ -26,4 +26,4 @@ class Session(models.Model):
     video = models.TextField(max_length=30, verbose_name="Название видео")
 
     def __str__(self):
-        return f"Сессия {self.id} для {self.FK_user} ({self.date} {self.time})"
+        return f""
