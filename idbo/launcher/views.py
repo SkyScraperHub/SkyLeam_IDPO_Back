@@ -36,6 +36,14 @@ class SessionList(generics.ListAPIView):
         now = datetime.now()
         queryset = queryset.filter(FK_user=request.auth["id"])
         page = self.paginate_queryset(queryset)
+        date_filter = self.request.query_params.get('date')
+        scenario_filter = self.request.query_params.get('scenario')
+
+        if date_filter:
+            queryset = queryset.filter(date=date_filter)
+
+        if scenario_filter:
+            queryset = queryset.filter(scenario=scenario_filter)
         if page is not None:
             
             serializer = self.get_serializer(page, many=True)
@@ -144,8 +152,6 @@ class UniqueScenariosSessionList(APIView):
         operation_description='Get unique scenarios for student sessions',
         manual_parameters=[
             openapi.Parameter('user_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, description='Student user ID'),
-            openapi.Parameter('date', openapi.IN_QUERY, type=openapi.TYPE_STRING, description='Filter by date (YYYY-MM-DD)'),
-            openapi.Parameter('scenario', openapi.IN_QUERY, type=openapi.TYPE_STRING, description='Filter by scenario text'),
         ],
         responses={
             200: 'OK',
@@ -156,8 +162,6 @@ class UniqueScenariosSessionList(APIView):
     )
     def get(self, request):
         user_id = request.query_params.get('user_id', None)
-        date = request.query_params.get('date', None)
-        scenario = request.query_params.get('scenario', None)
 
         if not user_id:
             return Response({"detail": "user_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -169,11 +173,6 @@ class UniqueScenariosSessionList(APIView):
 
         sessions = Session.objects.filter(FK_user=user)
 
-        if date:
-            sessions = sessions.filter(date=date)
-
-        if scenario:
-            sessions = sessions.filter(scenario__icontains=scenario)
 
         unique_scenarios = sessions.values_list('scenario', flat=True).distinct()
 
