@@ -1,28 +1,23 @@
 from rest_framework import generics, exceptions, request, status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics
-from .models import  Session
+from .models import Session
 from django.http import FileResponse, HttpResponseBadRequest
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from . import serializer
+from django.template import loader
+from django.http import HttpResponse
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
-from datetime import datetime, timedelta
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from launcher.models import Session
-from datetime import timedelta, datetime
+from datetime import datetime
 from services.s3 import MinioClient
 from rest_framework import parsers
 from utils import get_random_string
-from django.template import loader
-from django.http import HttpResponse
 
-from django.http import HttpResponseRedirect, HttpResponseNotFound
-from django.urls import reverse
 class SessionPagination(PageNumberPagination):
     page_size = 20
 
@@ -54,7 +49,7 @@ class SessionList(generics.ListAPIView):
     
 
 class SessionAdd(APIView):
-    permission_classes = (IsAuthenticated, )
+    # permission_classes = (IsAuthenticated, )
     authentication_classes = (JWTAuthentication,)
     parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.FileUploadParser)
     @swagger_auto_schema(
@@ -119,10 +114,10 @@ def DocGenerate(request):
     except FileNotFoundError:
         return HttpResponseBadRequest("File not found.")
 
-
 class SessionVideoView(APIView):
     permission_classes = (IsAuthenticated,)
-    
+
+
     def get(self, request, pk):
         try:
             session = Session.objects.get(pk=pk, FK_user=request.auth["id"])
@@ -138,4 +133,6 @@ class SessionVideoView(APIView):
             context = {"video_url": video_url}
             return HttpResponse(template.render(context, request))
         else:
+
             return HttpResponseBadRequest("Video not found.")
+

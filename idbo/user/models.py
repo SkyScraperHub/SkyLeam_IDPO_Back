@@ -1,4 +1,6 @@
 from django.db import models
+from django.urls import reverse
+from django.utils.http import urlencode
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .manager import CustomUserManager
 
@@ -54,12 +56,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # Имя поля, используемое для аутентификации (логин)
     USERNAME_FIELD = 'login'
-
-    # Список дополнительных полей, которые будут запрашиваться при создании пользователя
-    REQUIRED_FIELDS = ['last_name', 'first_name', 'email']
-
-    # Метод для представления пользователя в виде строки
+    
     def __str__(self):
-        return f"{self.last_name} {self.first_name} ({self.login})"
+        return f"{self.last_name} {self.first_name} {self.middle_name}"
     
     objects = CustomUserManager()
