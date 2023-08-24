@@ -8,5 +8,6 @@ urlpatterns = [
     path("sessions/add", views.SessionAdd.as_view(), name="add-session"),
     path("sessions/report",views.DocGenerate, name="doc-generate"),
     path('sessions/video/<int:pk>/', views.SessionVideoView.as_view(), name='session-video'),
+    path('unique_scenarios/', views.UniqueScenariosSessionList.as_view(), name='unique_scenarios'),
     ]
 
