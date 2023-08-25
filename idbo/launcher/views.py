@@ -36,6 +36,14 @@ class SessionList(generics.ListAPIView):
         now = datetime.now()
         queryset = queryset.filter(FK_user=request.auth["id"])
         page = self.paginate_queryset(queryset)
+        date_filter = self.request.query_params.get('date')
+        scenario_filter = self.request.query_params.get('scenario')
+
+        if date_filter:
+            queryset = queryset.filter(date=date_filter)
+
+        if scenario_filter:
+            queryset = queryset.filter(scenario=scenario_filter)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             data = {"page":int(self.request.query_params.get('page'))}
@@ -116,6 +124,7 @@ def DocGenerate(request):
 
 class SessionVideoView(APIView):
     permission_classes = (IsAuthenticated,)
+    
 
 
     def get(self, request, pk):
@@ -131,4 +140,30 @@ class SessionVideoView(APIView):
             return HttpResponse(template.render(context, request))
         else:
             return HttpResponseBadRequest("Video not found.")
+        
+class UniqueScenariosSessionList(APIView):
+    permission_classes = (IsAuthenticated, )
+    authentication_classes = (JWTAuthentication,)
 
+    @swagger_auto_schema(
+        operation_description='Get unique scenarios for student sessions',
+        manual_parameters=[
+            openapi.Parameter('user_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, description='Student user ID'),
+        ],
+        responses={
+            200: 'OK',
+            401: 'Unauthorized',
+            500: 'Internal Server Error'
+        }
+    )
+    def get(self, request):
+        user_id = request.query_params.get('user_id', None)
+
+        if not user_id:
+            return Response({"detail": "user_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        unique_scenarios = Session.objects.filter(FK_user__pk=user_id).values_list('scenario', flat=True).distinct()
+
+
+        return Response(data=unique_scenarios)
