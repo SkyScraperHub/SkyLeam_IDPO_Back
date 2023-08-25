@@ -170,4 +170,4 @@ class UniqueScenariosSessionList(APIView):
         unique_scenarios = Session.objects.filter(FK_user__pk=user_id).values_list('scenario', flat=True).distinct()
 
 
-        return Response({"unique_scenarios": unique_scenarios})
+        return Response(data=unique_scenarios)
