@@ -33,17 +33,15 @@ class SessionList(generics.ListAPIView):
     def list(self, request):
        
         queryset = self.filter_queryset(self.get_queryset())
-        now = datetime.now()
         queryset = queryset.filter(FK_user=request.auth["id"])
-        page = self.paginate_queryset(queryset)
-        date_filter = self.request.query_params.get('date')
-        scenario_filter = self.request.query_params.get('scenario')
-
+        date_filter = request.query_params.get('date')
+        scenario_filter = request.query_params.get('scenario')
         if date_filter:
             queryset = queryset.filter(date=date_filter)
 
         if scenario_filter:
             queryset = queryset.filter(scenario=scenario_filter)
+        page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             data = {"page":int(self.request.query_params.get('page'))}
