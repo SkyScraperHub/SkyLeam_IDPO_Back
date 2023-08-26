@@ -3,6 +3,7 @@ boto3==1.28.25
 botocore==1.31.25
 certifi==2023.7.22
 Django==4.2.4
+django-dynamic-raw-id==3.0
 django-minio-backend==3.5.0
 django-minio-storage==0.5.6
 django-storages==1.13.2
@@ -13,6 +14,7 @@ inflection==0.5.1
 jmespath==1.0.1
 minio==7.1.15
 packaging==23.1
+Pillow==10.0.0
 psycopg2==2.9.7
 PyJWT==2.8.0
 python-dateutil==2.8.2
