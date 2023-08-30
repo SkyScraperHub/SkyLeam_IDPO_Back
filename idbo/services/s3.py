@@ -18,3 +18,7 @@ class MinioClient:
     @staticmethod
     def get_presigned_url(name: str):
         return S3Clinet.presigned_get_object(os.getenv("MINIO_BUCKET_MEDIA"), f'{os.getenv("MINIO_FOLDER")}/{name}')
+    
+    @staticmethod
+    def delete_object(name: str):
+        S3Clinet.remove_object(os.getenv("MINIO_BUCKET_MEDIA"), f'{os.getenv("MINIO_FOLDER")}/{name}')

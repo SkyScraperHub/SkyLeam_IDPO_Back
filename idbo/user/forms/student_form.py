@@ -22,7 +22,7 @@ class StudentAdminForm(forms.ModelForm):
         
         except:
             raise ValidationError(_('Введите пароль'), code="Поле пароля пустое")
-        user  = User.object.get(login = cleaned_data["login"])
+        user  = User.objects.get(login = cleaned_data["login"])
         # if user:
             
         cleaned_data["password"] = make_password(password)

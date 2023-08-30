@@ -12,7 +12,8 @@ class AdminAdminForm(forms.ModelForm):
         model = User
 
         fields = (
-        "last_name", "first_name", "middle_name", "login", "password", "email", "is_active", "login", "password")
+        "profile_image",
+        "last_name", "first_name", "middle_name", "login", "password", "email", "is_active", "login")
         
     def clean(self):
         cleaned_data = super().clean()
@@ -28,3 +29,4 @@ class AdminAdminForm(forms.ModelForm):
         cleaned_data["fk_user"] = None
 
         return cleaned_data
+

@@ -9,6 +9,7 @@ from . import serializer
 from django.template import loader
 from django.http import HttpResponse
 from drf_yasg import openapi
+from drf_yasg.openapi import Schema, Items
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
@@ -32,19 +33,16 @@ class SessionList(generics.ListAPIView):
     def list(self, request):
        
         queryset = self.filter_queryset(self.get_queryset())
-        now = datetime.now()
         queryset = queryset.filter(FK_user=request.auth["id"])
-        page = self.paginate_queryset(queryset)
-        date_filter = self.request.query_params.get('date')
-        scenario_filter = self.request.query_params.get('scenario')
-
+        date_filter = request.query_params.get('date')
+        scenario_filter = request.query_params.get('scenario')
         if date_filter:
             queryset = queryset.filter(date=date_filter)
 
         if scenario_filter:
             queryset = queryset.filter(scenario=scenario_filter)
+        page = self.paginate_queryset(queryset)
         if page is not None:
-            
             serializer = self.get_serializer(page, many=True)
             data = {"page":int(self.request.query_params.get('page'))}
             pagination_info = self.get_paginated_response(serializer.data).data
@@ -129,20 +127,16 @@ class SessionVideoView(APIView):
 
     def get(self, request, pk):
         try:
-            session = Session.objects.get(pk=pk, FK_user=request.auth["id"])
+            session = Session.objects.get(pk=pk)
         except Session.DoesNotExist:
             return HttpResponseBadRequest("Session not found.")
 
-        video_name = session.video
-
-        if video_name:
-            user_id = request.auth["id"]
-            video_url = MinioClient.get_presigned_url(f"{user_id}/{video_name}")
+        if session.video:
+            video_url = MinioClient.get_presigned_url(f"{session.FK_user_id}/{session.video}")
             template = loader.get_template('video.html')
             context = {"video_url": video_url}
             return HttpResponse(template.render(context, request))
         else:
-
             return HttpResponseBadRequest("Video not found.")
         
 class UniqueScenariosSessionList(APIView):
