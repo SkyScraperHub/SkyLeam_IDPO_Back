@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.views.decorators.clickjacking import xframe_options_exempt
 from services.s3 import MinioClient
+from .filters import MyDateRangeFilter
 import os
 
 class UserAdmin(User):
@@ -24,6 +25,8 @@ class CustomUserAdmin(admin.ModelAdmin):
     model = UserAdmin
     form = AdminAdminForm
     list_display = ('last_name', "full_name" ,'first_name', 'email', 'position', 'profile_image')
+
+    list_filter = (('date_joined', MyDateRangeFilter),)
 
     def full_name(self, obj):
         return obj.middle_name+" " + obj.first_name +" "+ obj.last_name
