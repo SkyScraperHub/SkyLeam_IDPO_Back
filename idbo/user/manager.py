@@ -1,6 +1,5 @@
 from django.contrib.auth.models import BaseUserManager
 from django.utils.translation import gettext_lazy as _
-
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, login, password=None, **extra_fields):
         if not email:
@@ -18,7 +17,8 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_administrator', True)
-
+        extra_fields.setdefault("position", "admin")
+        
         if extra_fields.get('is_staff') is not True:
             raise ValueError(_('Суперпользователь должен иметь is_staff=True.'))
         if extra_fields.get('is_superuser') is not True:

@@ -40,7 +40,6 @@ AUTHENTICATION_BACKENDS = [
 ]
 # Application definition
 SECRET_KEY = os.getenv("SECRET_KEY")
-print(SECRET_KEY)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -171,8 +170,9 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_L10N = True
 
+USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/

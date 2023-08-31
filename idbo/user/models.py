@@ -1,10 +1,10 @@
 from django.db import models
-from django.urls import reverse
-from django.utils.http import urlencode
+from django.core.validators import MinLengthValidator
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.forms import ValidationError
 from .manager import CustomUserManager
-from services.s3 import MinioClient
-
+from django.utils.html import mark_safe
+import re
 # Создаем модель пользователя, наследуясь от AbstractBaseUser и PermissionsMixin
 class User(AbstractBaseUser, PermissionsMixin):
     # Выбор вариантов для поля "Должность"
@@ -13,18 +13,18 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('student', 'Обучающийся'),
         ('admin', 'Администратор'),
     )
-
+  
     # Поле для уникального идентификатора пользователя
     id = models.AutoField(primary_key=True, auto_created=True)
 
     # Фамилия пользователя
     last_name = models.CharField(max_length=100, verbose_name='Фамилия')
-
+    
     # Имя пользователя
     first_name = models.CharField(max_length=100, verbose_name='Имя')
 
     # Отчество пользователя
-    middle_name = models.CharField(max_length=100, verbose_name='Отчество')
+    middle_name = models.CharField(max_length=100, default="", verbose_name='Отчество')
 
     # Номер телефона пользователя
     phone_number = models.CharField(max_length=20, verbose_name='Номер телефона')
@@ -36,7 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     login = models.CharField(max_length=100, unique=True, verbose_name='Логин')
 
     # Хэшированный пароль пользователя
-    password = models.CharField(max_length=128, verbose_name='Пароль')
+    password = models.CharField(max_length=128, verbose_name='Пароль',validators=[MinLengthValidator(8)])
 
     # Внешний ключ на родительского пользователя (связь с самим собой)
     fk_user = models.ForeignKey('self', on_delete=models.CASCADE, default=None, null=True, verbose_name='Родительский пользователь')
@@ -55,10 +55,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Дата и время присоединения пользователя
     date_joined = models.DateTimeField(auto_now_add=True, verbose_name='Дата присоединения')
     
-    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True, verbose_name='Изображение')
+    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True, verbose_name='')
 
     # Имя поля, используемое для аутентификации (логин)
     USERNAME_FIELD = 'login'
+    REQUIRED_FIELDS = ['last_name', 'first_name', 'email']
     
     def __str__(self):
         return f"{self.last_name} {self.first_name} {self.middle_name}"
