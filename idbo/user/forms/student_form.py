@@ -23,13 +23,17 @@ class StudentAdminForm(forms.ModelForm):
             password = cleaned_data['password']
         except:
             raise ValidationError(_('Введите пароль'), code="Поле пароля пустое")
-        self.validate_phone_number(cleaned_data["phone_number"])
+        try:
+            if cleaned_data["phone_number"]:
+                self.validate_phone_number(cleaned_data["phone_number"])
+        except:
+            pass
         if "middle_name" not in cleaned_data:
             cleaned_data["middle_name"] = "" 
         return cleaned_data
     
     @staticmethod
     def validate_phone_number(value):
-      if re.match(r'^\+7[0-9]{10}$', value):
+      if not re.match(r'^\+7[0-9]{10}$', value):
           raise ValidationError(_('Введен неверный номер телефона, приме +79999999999'))
       return value

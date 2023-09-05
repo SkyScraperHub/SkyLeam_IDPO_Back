@@ -62,7 +62,7 @@ class SessionAdd(APIView):
     operation_description='Add session',
     consumes=[ "multipart/form-data"],
     manual_parameters=[
-        openapi.Parameter('date', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, default="30-03-2023", description='Дата сессии'),
+        openapi.Parameter('date', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, default="2023-03-31", description='Дата сессии'),
         openapi.Parameter('time', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, description=' 11:59:01'),
         openapi.Parameter('scenario', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, description='Сценарий'),
         openapi.Parameter('result', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, description='Результат'),  
@@ -96,7 +96,7 @@ class SessionAdd(APIView):
             return Response(serializer_class.error)
  
 @api_view(["GET"])
-@permission_classes(IsAuthenticated)
+@permission_classes([IsAuthenticated,])
 @swagger_auto_schema(
     operation_description='Generate Document',
     manual_parameters=[
@@ -155,13 +155,9 @@ class UniqueScenariosSessionList(APIView):
         }
     )
     def get(self, request):
-        user_id = request.query_params.get('user_id', None)
-
-        if not user_id:
-            return Response({"detail": "user_id parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-
-        unique_scenarios = Session.objects.filter(FK_user__pk=user_id).values_list('scenario', flat=True).distinct()
-
+        try:
+            unique_scenarios = Session.objects.filter(FK_user__pk=request.auth["id"]).values_list('scenario', flat=True).distinct()
+        except:
+            unique_scenarios = [ ]
 
         return Response(data=unique_scenarios)

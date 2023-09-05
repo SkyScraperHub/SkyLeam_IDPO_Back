@@ -12,7 +12,7 @@ class MinioClient:
         
     @staticmethod
     def upload_data(name:str,  data, length = -1):
-        S3Clinet.put_object(os.getenv("MINIO_BUCKET_MEDIA"), f'{os.getenv("MINIO_FOLDER")}/{name}',data, length)
+        S3Clinet.put_object(os.getenv("MINIO_BUCKET_MEDIA"), f'{os.getenv("MINIO_FOLDER")}{name}',data, length)
         
         
     @staticmethod

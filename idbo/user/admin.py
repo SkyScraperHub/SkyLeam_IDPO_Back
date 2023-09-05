@@ -30,7 +30,7 @@ class UserAdminAdmin(admin.ModelAdmin):
     readonly_fields = ['profile_image_preview']
 
     fieldsets = (
-        (None, {'fields': ('profile_image_preview', "profile_image", "last_name", "first_name", "middle_name", "login", "password", "email", "is_active"),}),
+        (None, {'fields': ('profile_image_preview', "profile_image", "last_name", "first_name", "middle_name", "login", "password", "phone_number", "email", "is_active"),}),
     )
     
     def add_view(self, request, form_url='', extra_context=None):
@@ -71,12 +71,12 @@ class UserAdminAdmin(admin.ModelAdmin):
         return format_html('<img src="{}" width="150" height="150" />', obj.profile_image.url)
     profile_image_preview.short_description = 'Изображение профиля'
     def full_name(self, obj):
-        return obj.middle_name+" " + obj.first_name +" "+ obj.last_name
+        return obj.last_name+" " + obj.first_name +" "+ obj.middle_name
     
     full_name.short_description = "ФИО"
     
     def get_list_display(self, request):
-         return ("object_id", 'last_name', "full_name", 'email', "phone_number", 'position')
+         return ("object_id", "full_name", 'email', "phone_number", 'position')
     def save_model(self, request, obj, form, change):
         # Загрузка изображения на S3
         if 'profile_image' in request.FILES:
@@ -317,9 +317,9 @@ class UserStudentAdmin(admin.ModelAdmin):
         if not obj.fk_user_id:
             obj.fk_user_id = request.user.id
             obj.fk_user = User.objects.get(id=request.user.id)
-        obj.is_administrator = True
-        obj.is_superuser = True
-        obj.is_staff = True
+        obj.is_administrator = False
+        obj.is_superuser = False
+        obj.is_staff = False
         super().save_model(request, obj, form, change)
     
     def get_form(self, request, obj=None, **kwargs):

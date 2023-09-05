@@ -22,13 +22,16 @@ class AdminAdminForm(forms.ModelForm):
             password = cleaned_data['password']
         except:
             raise ValidationError(_('Введите пароль'), code="Поле пароля пустое")
-        self.validate_password_length(cleaned_data["phone_number"])
         if len(password) < 8:
             raise ValidationError(_('Минимальная длина пароля 8 символов'), code="Пароль слишком маленький")
-        self.validate_phone_number(cleaned_data["phone_number"])
+        try:
+            if cleaned_data["phone_number"]:
+                self.validate_phone_number(cleaned_data["phone_number"])
+        except:
+            pass
         return cleaned_data
     @staticmethod
     def validate_phone_number(value):
-      if re.match(r'^\+7[0-9]{10}$', value):
+      if not re.match(r'^\+7[0-9]{10}$', value):
           raise ValidationError(_('Введен неверный номер телефона, приме +79999999999'))
       return value
