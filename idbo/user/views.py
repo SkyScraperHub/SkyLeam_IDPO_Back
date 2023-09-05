@@ -20,10 +20,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
             tokens = serializer.validated_data
-            user_name = f"{user.last_name} {user.first_name} {user.middle_name}"
             return Response(
                 {
-                    "fullName": user_name,
+                    "firstName": user.first_name,
+                    "middleName": "" if user.middle_name is None else user.middle_name,
+                    "lastName": user.last_name,
                     "access": tokens["access"],
                     "refresh": tokens["refresh"],
                 },
