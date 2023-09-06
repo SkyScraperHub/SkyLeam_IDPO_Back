@@ -14,17 +14,20 @@ from pathlib import Path
 from datetime import timedelta
 import os
 import dotenv
+from PyPDFForm import PyPDFForm
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+PyPDFForm.register_font("Montserrat-Regular", "./resources/Montserrat//static/Montserrat-Regular.ttf")
+PyPDFForm.register_font("Montserrat-SemiBold", "./resources/Montserrat//static/Montserrat-SemiBold.ttf")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
+DEBUG = False
 
 if DEBUG:
     dotenv.load_dotenv(dotenv.find_dotenv(".env.dev"))
@@ -54,7 +57,8 @@ INSTALLED_APPS = [
     'launcher',
     "drf_yasg",
     "minio_storage",
-    "psycopg2"
+    "psycopg2",
+    "rangefilter"
 ]
 
 MIDDLEWARE = [
@@ -73,7 +77,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
 
-        'DIRS': [os.path.join(BASE_DIR, 'launcher/templates'),],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'),os.path.join(BASE_DIR, 'admin/templates'),],
 
         'APP_DIRS': True,
         'OPTIONS': {
@@ -120,15 +124,15 @@ if not DEBUG:
 
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
 
-            'NAME': os.getenv("DB_NAME"),
+            'NAME': os.getenv("POSTGRES_DB_NAME"),
 
-            'USER': os.getenv("DB_USER"),
+            'USER': os.getenv("POSTGRES_USER"),
 
-            'PASSWORD': os.getenv("DB_PASSWORD"),
+            'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
 
-            'HOST': os.getenv("DB_HOST"),
+            'HOST': os.getenv("POSTGRES_HOST"),
 
-            'PORT': os.getenv("PORT"),
+            'PORT': os.getenv("POSTGRES_PORT"),
 
         }
 
@@ -190,7 +194,7 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,
 
-    "ALGORITHM": "HS256",
+    "ALGORITHM": "HS512",
     "SIGNING_KEY": SECRET_KEY,
     "VERIFYING_KEY": "",
     "AUDIENCE": None,
@@ -231,8 +235,12 @@ STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
 MINIO_STORAGE_ACCESS_KEY = os.getenv("MINIO_ACCESS")
 MINIO_STORAGE_SECRET_KEY = os.getenv("MINIO_SECRET")
 MINIO_STORAGE_ENDPOINT = os.getenv("MINIO_STORAGE_ENDPOINT")
-MINIO_STORAGE_USE_HTTPS = True
+MINIO_STORAGE_USE_HTTPS = False
 MINIO_STORAGE_MEDIA_BUCKET_NAME = os.getenv("MINIO_BUCKET_MEDIA")
 MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True
 MINIO_STORAGE_STATIC_BUCKET_NAME = os.getenv("MINIO_BUCKET_STATIC")
 MINIO_STORAGE_AUTO_CREATE_STATIC_BUCKET = True
+
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
+CELERY_IMPORTS = ("launcher.tasks", )

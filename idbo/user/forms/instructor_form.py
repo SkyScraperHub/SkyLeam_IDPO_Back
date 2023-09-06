@@ -18,14 +18,14 @@ class InstructorAdminForm(forms.ModelForm):
         try:
             password = cleaned_data['password']
         except:
-            raise ValidationError(_('Введите пароль'), code="Поле пароля пустое")
+            raise ValidationError(_('Ошибка'), code="Поле пароля пустое")
         try:
             if cleaned_data["phone_number"]:
-                self.validate_phone_number(cleaned_data["phone_number"])
+                self.validate_password_length(cleaned_data["phone_number"])
         except:
             pass
         if len(password) < 8:
-            raise ValidationError(_('Минимальная длина пароля 8 символов'), code="Пароль слишком маленький")
+            raise ValidationError(_('Ошибка'), code="Пароль слишком маленький")
         return cleaned_data
     
     @staticmethod

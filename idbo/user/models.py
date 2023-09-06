@@ -1,10 +1,9 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.forms import ValidationError
 from .manager import CustomUserManager
-from django.utils.html import mark_safe
-import re
+import re, os
+from services.s3 import MinioClient
 # Создаем модель пользователя, наследуясь от AbstractBaseUser и PermissionsMixin
 class User(AbstractBaseUser, PermissionsMixin):
     # Выбор вариантов для поля "Должность"
@@ -63,7 +62,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     def __str__(self):
         return f"{self.last_name} {self.first_name} {self.middle_name}"
+    class Meta:
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
     
-    
-    
+    def delete(self, *args, **kwargs):
+        try:
+            folder = os.getenv("MINIO_FOLDER")
+            MinioClient.delete_object( self.profile_image.replace(f"{folder}/", "") + "/" + self.video)
+        # перед удалением, удаляем изображение с сервера
+        except:
+            print("Image don't exist")
+        super(User, self).delete(*args, **kwargs)
     objects = CustomUserManager()

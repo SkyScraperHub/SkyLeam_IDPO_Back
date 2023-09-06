@@ -1,6 +1,7 @@
 from rest_framework import generics, exceptions, request, status
 from rest_framework.permissions import IsAuthenticated
 from .models import Session
+import io
 from django.http import FileResponse, HttpResponseBadRequest
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.views import APIView
@@ -9,7 +10,6 @@ from . import serializer
 from django.template import loader
 from django.http import HttpResponse
 from drf_yasg import openapi
-from drf_yasg.openapi import Schema, Items
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
@@ -18,6 +18,7 @@ from datetime import datetime
 from services.s3 import MinioClient
 from rest_framework import parsers
 from utils import get_random_string
+from PyPDFForm import PyPDFForm
 
 class SessionPagination(PageNumberPagination):
     page_size = 20
@@ -62,11 +63,11 @@ class SessionAdd(APIView):
     operation_description='Add session',
     consumes=[ "multipart/form-data"],
     manual_parameters=[
-        openapi.Parameter('date', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, default="2023-03-31", description='Дата сессии'),
-        openapi.Parameter('time', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, description=' 11:59:01'),
+        openapi.Parameter('date', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, default="2023-03-30", description='Дата сессии'),
+        openapi.Parameter('time', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, default="11:59:01", description='Время'),
         openapi.Parameter('scenario', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, description='Сценарий'),
         openapi.Parameter('result', in_=openapi.IN_FORM, type=openapi.TYPE_STRING, description='Результат'),  
-        openapi.Parameter('video', in_=openapi.IN_FORM, type=openapi.TYPE_FILE, description='The uploaded video'),
+        openapi.Parameter('video', in_=openapi.IN_FORM, type=openapi.TYPE_FILE, description='Видео'),
     ],
     responses={
         200: openapi.Response(description='OK'),
@@ -89,7 +90,7 @@ class SessionAdd(APIView):
         data["FK_user"] = request.auth["id"]
         serializer_class = serializer.SessionAddSerializer(data=data, many=False)
         if serializer_class.is_valid(raise_exception=True):
-            MinioClient.upload_data("/" + str(request.auth["id"]) + "/" + file_name, file, length=file.size)
+            MinioClient.upload_data("public/"+str(request.auth["id"]) + "/" + file_name, file, length=file.size)
             serializer_class.save()
             return Response()
         else: 
@@ -113,12 +114,52 @@ def DocGenerate(request):
     pk = request.query_params.get('pk', None)
     if pk is None:
         return HttpResponseBadRequest("The 'pk' parameter is required.")
-    file_path = f"./resources/test.pdf"
+    file_path = f"./resources/template.pdf"
     try:
-        file = open(file_path, "rb")
-        return FileResponse(file, filename=f"{pk}.pdf")
-    except FileNotFoundError:
+        session = Session.objects.get(id = pk)
+    except:
         return HttpResponseBadRequest("File not found.")
+    pdf_form = PyPDFForm(file_path)
+    
+    pdf_form.elements["id"].font = "Montserrat-SemiBold"
+    pdf_form.elements["id"].font_size = 5
+    
+    pdf_form.elements["full_name"].font = "Montserrat-SemiBold"
+    pdf_form.elements["full_name"].font_size = 10
+    
+    pdf_form.elements["scenario"].font = "Montserrat-Regular"
+    pdf_form.elements["scenario"].font_size = 5
+    
+    pdf_form.elements["hour"].font = "Montserrat-SemiBold"
+    pdf_form.elements["hour"].font_size = 5
+    
+    pdf_form.elements["minute"].font = "Montserrat-SemiBold"
+    pdf_form.elements["minute"].font_size = 5
+    
+    pdf_form.elements["score"].font = "Montserrat-SemiBold"
+    pdf_form.elements["score"].font_size = 5
+    
+    pdf_form.elements["rez_word"].font = "Montserrat-SemiBold"
+    pdf_form.elements["rez_word"].font_size = 5
+    
+    pdf_form.elements["date"].font = "Montserrat-SemiBold"
+    pdf_form.elements["date"].font_size = 5
+    id = "0"*(6 - len(str(session.FK_user_id))) + str(session.FK_user_id)
+    date = session.date.strftime('%d.%m.%Y')
+    pdf_form.fill({
+        "id": id,
+        "full_name": f"{session.FK_user.last_name} {session.FK_user.first_name} {session.FK_user.middle_name}",
+        "scenario": session.scenario,
+        "hour": session.time.strftime('%H'),
+        "minute": session.time.strftime('%M'),
+        "score": str(session.result),
+        "rez_word": "" if session.result > 65 else "не",
+        "date":date,
+        
+    })
+
+    return FileResponse(io.BytesIO(pdf_form.stream), filename=f"sertificat_{session.FK_user.id}_{date}.pdf")
+
 
 class SessionVideoView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -132,7 +173,7 @@ class SessionVideoView(APIView):
             return HttpResponseBadRequest("Session not found.")
 
         if session.video:
-            video_url = MinioClient.get_presigned_url(f"{session.FK_user_id}/{session.video}")
+            video_url = MinioClient.get_presigned_url(f"public/{session.FK_user_id}/{session.video}")
             template = loader.get_template('video.html')
             context = {"video_url": video_url}
             return HttpResponse(template.render(context, request))
@@ -155,9 +196,9 @@ class UniqueScenariosSessionList(APIView):
         }
     )
     def get(self, request):
+        
         try:
             unique_scenarios = Session.objects.filter(FK_user__pk=request.auth["id"]).values_list('scenario', flat=True).distinct()
-        except:
-            unique_scenarios = [ ]
-
+        except: 
+            pass
         return Response(data=unique_scenarios)

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 from django.contrib import admin
 from django.http.request import HttpRequest
 from django.urls import reverse
@@ -10,25 +10,45 @@ from launcher.admin import SessionModelInline
 from .forms import StudentAdminForm, InstructorAdminForm, AdminAdminForm
 from django.db.models import Q
 from django.contrib.auth.models import Group
-from django.views.decorators.clickjacking import xframe_options_exempt
 from services.s3 import MinioClient
-import os
+from utils import get_random_string
+from django.contrib import admin
+from filters import MyDateRangeFilter
 
+
+admin.site.site_header = "Панель инструкторов"
+
+admin.site.site_title = "Панель инструкторов"
+
+admin.site.index_title = "Добро пожаловать в панель инструктора!"
 class UserAdmin(User):
     class Meta:
         proxy = True
         verbose_name = _("пользователя")
         verbose_name_plural = _("Коллекции Администраторов")
     def __str__ (self):
-        return ""
-
+        return f"{self.last_name} {self.first_name} {self.middle_name}"
 
 @admin.register(UserAdmin)
 class UserAdminAdmin(admin.ModelAdmin):
     form = AdminAdminForm
-
+    
+    list_filter = (('date_joined', MyDateRangeFilter),)
+    
+    ordering = ("id", )
+    
     readonly_fields = ['profile_image_preview']
+    
+    actions = ['delete_selected']
+    
+    def delete_selected(self, request, queryset):
+        self.model._meta.verbose_name = "Пользователь"
+        # Implement your custom deletion logic here
 
+        # This could be directly deleting the objects
+        for obj in queryset:
+            obj.delete()
+    delete_selected.short_description = "Удалить выбранных пользователей"
     fieldsets = (
         (None, {'fields': ('profile_image_preview', "profile_image", "last_name", "first_name", "middle_name", "login", "password", "phone_number", "email", "is_active"),}),
     )
@@ -45,6 +65,7 @@ class UserAdminAdmin(admin.ModelAdmin):
         extra_context['show_save_and_add_another'] = False
         extra_context['show_save_and_continue'] = False
         extra_context['show_save'] = True
+        extra_context["history"] = False
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
     
     def has_view_permission(self, request, obj=None) -> bool:
@@ -76,13 +97,26 @@ class UserAdminAdmin(admin.ModelAdmin):
     full_name.short_description = "ФИО"
     
     def get_list_display(self, request):
+         self.model._meta.verbose_name = "пользователя"
          return ("object_id", "full_name", 'email', "phone_number", 'position')
     def save_model(self, request, obj, form, change):
         # Загрузка изображения на S3
+        try:
+            user = User.objects.get(id = obj.id)
+            if user.profile_image != "" and obj.profile_image == "":
+                MinioClient.delete_object(user.profile_image.name)
+            elif user.profile_image != obj.profile_image:
+                MinioClient.delete_object(user.profile_image.name) 
+        except:
+            pass
+        self.model._meta.verbose_name = "Пользователь"
         if 'profile_image' in request.FILES:
             image = request.FILES['profile_image']
-            MinioClient.upload_data(image.name, image, image.size)
-            obj.profile_image = os.getenv("MINIO_FOLDER") + "/" + image.name
+            img_name = get_random_string(40)
+            img_prefix = image.name.split(".")
+            img = f"{img_name}.{img_prefix[-1]}"
+            MinioClient.upload_data(img, image, image.size)
+            obj.profile_image =  img
         if obj.position == "":
             obj.position = User.POSITION_CHOICES[2][0]
         try:
@@ -117,7 +151,7 @@ class UserInstructor(User):
         verbose_name = _("пользователя")
         verbose_name_plural = _("Коллекции Инструкторов")
     def __str__ (self):
-        return ""
+        return f"{self.last_name} {self.first_name} {self.middle_name}" 
 
 
 class UserStudent(User):
@@ -126,7 +160,7 @@ class UserStudent(User):
         verbose_name = _("пользователя")
         verbose_name_plural = _("Коллекции Инструктируемых")
     def __str__ (self):
-        return ""
+        return f"{self.last_name} {self.first_name} {self.middle_name}"
 
 class UserStudentTabular(User):
     class Meta:
@@ -165,11 +199,24 @@ class StudentModelInline(admin.TabularInline):
 
 @admin.register(UserInstructor)
 class UserInstructorAdmin(admin.ModelAdmin):
-    list_display = ( "id", "full_name", "phone_number", "email", "position")
+    ordering = ("id", )
+    list_filter = (('date_joined', MyDateRangeFilter),)
     form = InstructorAdminForm
     inlines = [StudentModelInline,]
     readonly_fields = ['profile_image_preview']
+    actions = ['delete_selected']
+    def delete_selected(self, request, queryset):
+        self.model._meta.verbose_name = "Пользователь"
+        # Implement your custom deletion logic here
+
+        # This could be directly deleting the objects
+        for obj in queryset:
+            obj.delete()
+    delete_selected.short_description = "Удалить выбранных пользователей"
     
+    def get_list_display(self, request):
+        self.model._meta.verbose_name = "пользователя"
+        return ( "id", "full_name", "phone_number", "email", "position")
     fieldsets = (
         (None, {'fields': ('profile_image_preview', "profile_image", "last_name", "first_name", "middle_name", "login", "password", "email", "phone_number", "is_active"),}),
     )
@@ -224,10 +271,20 @@ class UserInstructorAdmin(admin.ModelAdmin):
     
     def save_model(self, request, obj, form, change):
         # Загрузка изображения на S3
+        try:
+            user = User.objects.get(id = obj.id)
+            if user.profile_image != "" and obj.profile_image == "":
+                MinioClient.delete_object(user.profile_image.name)
+            elif user.profile_image != obj.profile_image:
+                MinioClient.delete_object(user.profile_image.name) 
+        except:
+            pass
+        self.model._meta.verbose_name = "Пользователь"
         if 'profile_image' in request.FILES:
             image = request.FILES['profile_image']
-            MinioClient.upload_data(image.name, image, image.size)
-            obj.profile_image = os.getenv("MINIO_FOLDER") + "/" + image.name
+            folder = get_random_string(40)
+            MinioClient.upload_data(f"{folder}/{image.name}", image, image.size)
+            obj.profile_image =  f"{folder}/{image.name}"
         if obj.position == "":
             obj.position = User.POSITION_CHOICES[0][0]
         try:
@@ -252,9 +309,17 @@ class UserStudentAdmin(admin.ModelAdmin):
     form = StudentAdminForm
     ordering = ('id', )
     inlines = [SessionModelInline,]
-    
+    list_filter = (('date_joined', MyDateRangeFilter),)
     readonly_fields = ['profile_image_preview']
-    
+    actions = ['delete_selected']
+    def delete_selected(self, request, queryset):
+        self.model._meta.verbose_name = "Пользователь"
+        # Implement your custom deletion logic here
+
+        # This could be directly deleting the objects
+        for obj in queryset:
+            obj.delete()
+    delete_selected.short_description = "Удалить выбранных пользователей"
     def add_view(self, request, form_url='', extra_context=None):
         extra_context = extra_context or {}
         extra_context['show_save_and_add_another'] = False
@@ -281,8 +346,13 @@ class UserStudentAdmin(admin.ModelAdmin):
     def full_name(self, obj):
         return obj.last_name+" " + obj.first_name +" "+ obj.middle_name
     
-    def id_instructor(self, obj):
-        return obj.fk_user_id
+    def instructor(self, obj):
+        url = (
+            reverse(f"admin:user_userinstructor_change",args=[obj.fk_user_id])
+        )
+        return format_html('<a href="{}">{} </a>', url, obj.fk_user_id)
+    
+    instructor.short_description = "ID инструктора"
     
     full_name.short_description = "Фамилия ИО"
     
@@ -303,10 +373,20 @@ class UserStudentAdmin(admin.ModelAdmin):
     
     def save_model(self, request, obj, form, change):
         # Загрузка изображения на S3
+        try:
+            user = User.objects.get(id = obj.id)
+            if user.profile_image != "" and obj.profile_image == "":
+                MinioClient.delete_object(user.profile_image.name)
+            elif user.profile_image != obj.profile_image:
+                MinioClient.delete_object(user.profile_image.name) 
+        except:
+            pass
+        self.model._meta.verbose_name = "Пользователь"
         if 'profile_image' in request.FILES:
             image = request.FILES['profile_image']
-            MinioClient.upload_data(image.name, image, image.size)
-            obj.profile_image = os.getenv("MINIO_FOLDER") + "/" + image.name
+            folder = get_random_string(40)
+            MinioClient.upload_data(f"{folder}/{image.name}", image, image.size)
+            obj.profile_image =  f"{folder}/{image.name}"
         if obj.position == "":
             obj.position = User.POSITION_CHOICES[1][0]
         try:
@@ -332,15 +412,15 @@ class UserStudentAdmin(admin.ModelAdmin):
         return form
     
     def get_list_display(self, request):
+        self.model._meta.verbose_name = "пользователя"
         if request.user.position == User.POSITION_CHOICES[0][0]:
             return ('id', "full_name", "phone_number", "email", "position")
-        return ('id', "full_name", "phone_number", "email", "position","id_instructor")
-    
+        return ('id', "full_name", "phone_number", "email", "position","instructor")
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.position == User.POSITION_CHOICES[0][0]:
             return qs.filter(Q(fk_user=request.user.id) & Q(position=User.POSITION_CHOICES[1][0]))
         return qs.filter(Q(position=User.POSITION_CHOICES[1][0]))
-
 
 admin.site.unregister(Group)

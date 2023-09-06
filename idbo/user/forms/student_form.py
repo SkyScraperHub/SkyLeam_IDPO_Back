@@ -22,10 +22,10 @@ class StudentAdminForm(forms.ModelForm):
         try:
             password = cleaned_data['password']
         except:
-            raise ValidationError(_('Введите пароль'), code="Поле пароля пустое")
+            raise ValidationError(_('Ошибка'), code="Поле пароля пустое")
         try:
             if cleaned_data["phone_number"]:
-                self.validate_phone_number(cleaned_data["phone_number"])
+                self.validate_password_length(cleaned_data["phone_number"])
         except:
             pass
         if "middle_name" not in cleaned_data:

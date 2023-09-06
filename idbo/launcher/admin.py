@@ -9,6 +9,7 @@ from django.utils.http import urlencode
 import pandas as pd
 from django.db.models import Q
 from datetime import datetime
+from filters import MyDateRangeFilter
 # Register your models here.
 
 class SessionTabular(Session):
@@ -41,7 +42,8 @@ class SessionModelInline(admin.TabularInline):
     
     def video_url(self, obj):
         url = reverse("session-video", args=[obj.id])
-        highlighted_text = f"<a href='{url}' target='_blank' onclick='window.open(`{url}`, `_blank`)'>Просмотреть видео</a>"
+        # highlighted_text = f"<a href='{url}' target='_blank' onclick='window.open(`{url}`, `_blank`)'>Просмотреть видео</a>"
+        highlighted_text = f"<a href='{url}' target='_blank'>Просмотреть видео</a>"
         return format_html(highlighted_text)
     
     report.short_description = "Файл отчет"
@@ -70,6 +72,8 @@ class SessionProxyAdmin(Session):
     
 @admin.register(SessionProxyAdmin)
 class SessionAdmin(admin.ModelAdmin):
+    
+    list_filter = (('date', MyDateRangeFilter),)
     
     ordering = ("id", )
     
@@ -104,6 +108,15 @@ class SessionAdmin(admin.ModelAdmin):
         return obj.date.strftime('%d-%m-%Y')
     
     date_correct.short_description = "Дата"
+    
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
     
     def report(self, obj):
         url = (
