@@ -5,7 +5,7 @@ services:
     build: ./idbo
     container_name: idbo-back
     env_file:
-      - idbo/.env
+      - .env
     expose:
       - 31022
     ports:
