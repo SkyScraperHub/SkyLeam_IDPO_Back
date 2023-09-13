@@ -4,7 +4,8 @@ from datetime import timedelta
 S3Clinet = Minio(
             os.getenv("MINIO_STORAGE_ENDPOINT"),
             access_key=os.getenv("MINIO_ACCESS"),
-            secret_key=os.getenv("MINIO_SECRET")
+            secret_key=os.getenv("MINIO_SECRET"),
+            secret=False
             
         )
 
