@@ -7,7 +7,8 @@ from django.utils.html import mark_safe
 import re
 class AdminAdminForm(forms.ModelForm):
     middle_name = forms.CharField( max_length=250, required=False, label = "Отчество")
-    
+    email = forms.EmailField(required=False, label = "Почта")
+    phone_number = forms.CharField(required=False, label='Номер телефона')
     class Meta:
         model = User
 

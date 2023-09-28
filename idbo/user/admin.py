@@ -13,7 +13,7 @@ from django.contrib.auth.models import Group
 from services.s3 import MinioClient
 from utils import get_random_string
 from django.contrib import admin
-from filters import MyDateRangeFilter
+from filters import MyDateRangeFilter, IdFilter, FIOFilter
 from utils import convert_id_int_to_str
 
 admin.site.site_header = "Панель инструкторов"
@@ -33,7 +33,7 @@ class UserAdmin(User):
 class UserAdminAdmin(admin.ModelAdmin):
     form = AdminAdminForm
     
-    list_filter = (('date_joined', MyDateRangeFilter),)
+    list_filter = (('date_joined', MyDateRangeFilter), ("id", IdFilter),("full_name", FIOFilter),)
     
     ordering = ("id", )
     
@@ -50,7 +50,7 @@ class UserAdminAdmin(admin.ModelAdmin):
             obj.delete()
     delete_selected.short_description = "Удалить выбранных пользователей"
     fieldsets = (
-        (None, {'fields': ('profile_image_preview', "profile_image", "last_name", "first_name", "middle_name", 'rank', "login", "password", "phone_number", "email", "is_active"),}),
+        (None, {'fields': ('profile_image_preview', "profile_image", "login", "password", "last_name", "first_name", "middle_name", "rank", "phone_number", "email", "is_active"),}),
     )
     
     def add_view(self, request, form_url='', extra_context=None):
@@ -200,7 +200,7 @@ class StudentModelInline(admin.TabularInline):
 @admin.register(UserInstructor)
 class UserInstructorAdmin(admin.ModelAdmin):
     ordering = ("id", )
-    list_filter = (('date_joined', MyDateRangeFilter),)
+    list_filter = (('date_joined', MyDateRangeFilter), ("id", IdFilter),("full_name", FIOFilter),)
     form = InstructorAdminForm
     inlines = [StudentModelInline,]
     readonly_fields = ['profile_image_preview']
@@ -314,7 +314,8 @@ class UserStudentAdmin(admin.ModelAdmin):
     form = StudentAdminForm
     ordering = ('id', )
     inlines = [SessionModelInline,]
-    list_filter = (('date_joined', MyDateRangeFilter),)
+    list_filter = (('date_joined', MyDateRangeFilter), ("id", IdFilter),("full_name", FIOFilter),)
+    # search_fields = ["id",]
     readonly_fields = [ "instructor",]
     actions = ['delete_selected']
     def delete_selected(self, request, queryset):
@@ -376,7 +377,7 @@ class UserStudentAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request: HttpRequest, obj: Any | None = ...) -> List[Tuple[str | None, Dict[str, Any]]]:
         if request.user.position != User.POSITION_CHOICES[2][0]:
             return (
-        (None, {'fields': ('profile_image_preview', "profile_image", "login", "password",  "last_name", "first_name", "middle_name", "rank", "phone_number", "email", "is_active"),}),
+        (None, {'fields': ('profile_image_preview',  "login", "password",  "last_name", "first_name", "middle_name", "rank", "phone_number", "email", "is_active"),}),
     )
         return (
         (None, {'fields': ('profile_image_preview', "profile_image", "login", "password",  "last_name", "first_name", "middle_name", "rank", "phone_number", "email", "instructor", "fk_user", "is_active"),}),
@@ -416,11 +417,11 @@ class UserStudentAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         
         form = super().get_form(request, obj, **kwargs)
-        try:
-            form.base_fields['profile_image'].label = ''
-            # form.base_fileds["profile_image"].initial_text = ""
-        except:
-            pass
+        # try:
+        #     form.base_fields['profile_image'].label = ''
+        #     # form.base_fileds["profile_image"].initial_text = ""
+        # except:
+        #     pass
         return form
     
     def get_list_display(self, request):

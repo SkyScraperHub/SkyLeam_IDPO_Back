@@ -9,7 +9,7 @@ from django.utils.http import urlencode
 import pandas as pd
 from django.db.models import Q
 from datetime import datetime
-from filters import MyDateRangeFilter
+from filters import MyDateRangeFilter, ScenarioFilter, IdFilter
 from utils import convert_id_int_to_str
 # Register your models here.
 
@@ -79,7 +79,7 @@ class SessionProxyAdmin(Session):
 @admin.register(SessionProxyAdmin)
 class SessionAdmin(admin.ModelAdmin):
     
-    list_filter = (('date', MyDateRangeFilter),)
+    list_filter = (('date', MyDateRangeFilter),("id", IdFilter), ("scenario", ScenarioFilter),)
     
     ordering = ("id", )
     

@@ -14,7 +14,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
   
     # Поле для уникального идентификатора пользователя
-    id = models.AutoField(primary_key=True, auto_created=True)
+    id = models.AutoField(primary_key=True, verbose_name="ID пользователя", auto_created=True)
 
     # Фамилия пользователя
     last_name = models.CharField(max_length=100, verbose_name='Фамилия')
@@ -26,10 +26,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     middle_name = models.CharField(max_length=100, default="", verbose_name='Отчество')
 
     # Номер телефона пользователя
-    phone_number = models.CharField(max_length=20, verbose_name='Номер телефона')
+    phone_number = models.CharField(max_length=20, default = "", verbose_name='Номер телефона')
 
     # Email пользователя (уникальный)
-    email = models.EmailField(verbose_name='Почта', unique=True)
+    email = models.EmailField(verbose_name='Почта', default ="")
 
     # Логин пользователя (уникальный)
     login = models.CharField(max_length=100, unique=True, verbose_name='Логин')
@@ -57,11 +57,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     # Дата и время присоединения пользователя
     date_joined = models.DateTimeField(auto_now_add=True, verbose_name='Дата присоединения')
     
+    full_name = models.CharField(max_length=255, blank=True, verbose_name="Фамилия И.О.")
+    
     profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True, verbose_name='')
 
     # Имя поля, используемое для аутентификации (логин)
     USERNAME_FIELD = 'login'
-    REQUIRED_FIELDS = ['last_name', 'first_name', 'email']
+    REQUIRED_FIELDS = ['last_name', 'first_name']
     
     def __str__(self):
         return f"{self.last_name} {self.first_name} {self.middle_name}"
@@ -78,3 +80,6 @@ class User(AbstractBaseUser, PermissionsMixin):
             print("Image don't exist")
         super(User, self).delete(*args, **kwargs)
     objects = CustomUserManager()
+    def save(self, *args, **kwargs):
+        self.full_name = f"{self.last_name} {self.first_name} {self.middle_name}"
+        super().save(*args, **kwargs)
