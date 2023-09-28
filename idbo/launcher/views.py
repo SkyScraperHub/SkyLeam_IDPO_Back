@@ -17,7 +17,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from datetime import datetime
 from services.s3 import MinioClient
 from rest_framework import parsers
-from utils import get_random_string
+from utils import get_random_string, convert_id_int_to_str
 from PyPDFForm import PyPDFForm
 
 class SessionPagination(PageNumberPagination):
@@ -144,14 +144,14 @@ def DocGenerate(request):
     
     pdf_form.elements["date"].font = "Montserrat-SemiBold"
     pdf_form.elements["date"].font_size = 5
-    id = "0"*(6 - len(str(session.FK_user_id))) + str(session.FK_user_id)
+    id = convert_id_int_to_str(session.FK_user_id)
     date = session.date.strftime('%d.%m.%Y')
     pdf_form.fill({
         "id": id,
         "full_name": f"{session.FK_user.last_name} {session.FK_user.first_name} {session.FK_user.middle_name}",
         "scenario": session.scenario,
-        "hour": session.time.strftime('%H'),
-        "minute": session.time.strftime('%M'),
+        "hour": session.time.strftime('%M'),
+        "minute": session.time.strftime('%S'),
         "score": str(session.result),
         "rez_word": "" if session.result > 65 else "не",
         "date":date,

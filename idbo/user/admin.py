@@ -14,7 +14,7 @@ from services.s3 import MinioClient
 from utils import get_random_string
 from django.contrib import admin
 from filters import MyDateRangeFilter
-
+from utils import convert_id_int_to_str
 
 admin.site.site_header = "Панель инструкторов"
 
@@ -25,7 +25,7 @@ class UserAdmin(User):
     class Meta:
         proxy = True
         verbose_name = _("пользователя")
-        verbose_name_plural = _("Коллекции Администраторов")
+        verbose_name_plural = _("Картотеки Администраторов")
     def __str__ (self):
         return f"{self.last_name} {self.first_name} {self.middle_name}"
 
@@ -50,7 +50,7 @@ class UserAdminAdmin(admin.ModelAdmin):
             obj.delete()
     delete_selected.short_description = "Удалить выбранных пользователей"
     fieldsets = (
-        (None, {'fields': ('profile_image_preview', "profile_image", "last_name", "first_name", "middle_name", "login", "password", "phone_number", "email", "is_active"),}),
+        (None, {'fields': ('profile_image_preview', "profile_image", "last_name", "first_name", "middle_name", 'rank', "login", "password", "phone_number", "email", "is_active"),}),
     )
     
     def add_view(self, request, form_url='', extra_context=None):
@@ -98,7 +98,7 @@ class UserAdminAdmin(admin.ModelAdmin):
     
     def get_list_display(self, request):
          self.model._meta.verbose_name = "пользователя"
-         return ("object_id", "full_name", 'email', "phone_number", 'position')
+         return ("object_id", "full_name", 'rank', 'email', "phone_number", 'position')
     def save_model(self, request, obj, form, change):
         # Загрузка изображения на S3
         try:
@@ -132,7 +132,7 @@ class UserAdminAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
     
     def object_id(self, obj):
-        return obj.id
+        return convert_id_int_to_str(obj.id)
     
     object_id.short_description = "ID"
     
@@ -149,7 +149,7 @@ class UserInstructor(User):
     class Meta:
         proxy = True
         verbose_name = _("пользователя")
-        verbose_name_plural = _("Коллекции Инструкторов")
+        verbose_name_plural = _("Картотеки Инструкторов")
     def __str__ (self):
         return f"{self.last_name} {self.first_name} {self.middle_name}" 
 
@@ -158,7 +158,7 @@ class UserStudent(User):
     class Meta:
         proxy = True
         verbose_name = _("пользователя")
-        verbose_name_plural = _("Коллекции Инструктируемых")
+        verbose_name_plural = _("Картотеки Курсантов")
     def __str__ (self):
         return f"{self.last_name} {self.first_name} {self.middle_name}"
 
@@ -183,7 +183,7 @@ class StudentModelInline(admin.TabularInline):
     def full_name(self, obj):
         return obj.last_name+" " + obj.first_name +" "+ obj.middle_name
     
-    full_name.short_description = "Фамилия ИО"
+    full_name.short_description = "Фамилия И.О."
     
     object_id.short_description = "ID"
     
@@ -214,17 +214,22 @@ class UserInstructorAdmin(admin.ModelAdmin):
             obj.delete()
     delete_selected.short_description = "Удалить выбранных пользователей"
     
+    def object_id(self, obj):
+        return convert_id_int_to_str(obj.id)
+    
+    object_id.short_description = "ID"
+    
     def get_list_display(self, request):
         self.model._meta.verbose_name = "пользователя"
-        return ( "id", "full_name", "phone_number", "email", "position")
+        return ( "object_id", "full_name", 'rank', "phone_number", "email", "position")
     fieldsets = (
-        (None, {'fields': ('profile_image_preview', "profile_image", "last_name", "first_name", "middle_name", "login", "password", "email", "phone_number", "is_active"),}),
+        (None, {'fields': ('profile_image_preview', "profile_image", "login", "password", "last_name", "first_name", "middle_name", "rank", "phone_number", "email", "is_active"),}),
     )
     
     def full_name(self, obj):
         return obj.last_name+" " + obj.first_name +" "+ obj.middle_name
     
-    full_name.short_description = "Фамилия ИО"
+    full_name.short_description = "Фамилия И.О."
     
     def has_view_permission(self, request, obj=None) -> bool:
         if request.user.position != User.POSITION_CHOICES[2][0]:
@@ -310,7 +315,7 @@ class UserStudentAdmin(admin.ModelAdmin):
     ordering = ('id', )
     inlines = [SessionModelInline,]
     list_filter = (('date_joined', MyDateRangeFilter),)
-    readonly_fields = ['profile_image_preview']
+    readonly_fields = [ "instructor",]
     actions = ['delete_selected']
     def delete_selected(self, request, queryset):
         self.model._meta.verbose_name = "Пользователь"
@@ -336,39 +341,45 @@ class UserStudentAdmin(admin.ModelAdmin):
     
     def profile_image_preview(self, obj):
         return format_html('<img src="{}" width="150" height="150" />', obj.profile_image.url)
-    profile_image_preview.short_description = 'Изображение профиля'
+    
+    profile_image_preview.short_description = "Изображение профиля"
     
     def has_delete_permission(self, request, obj=None):
         if request.user.position != User.POSITION_CHOICES[2][0]:
             return False
         return True
-    
+   
+    def object_id(self, obj):
+        return convert_id_int_to_str(obj.id)
+   
+    object_id.short_description = "ID"
+   
     def full_name(self, obj):
         return obj.last_name+" " + obj.first_name +" "+ obj.middle_name
     
     def instructor(self, obj):
+        if obj.fk_user_id is None:
+            return ""
         url = (
             reverse(f"admin:user_userinstructor_change",args=[obj.fk_user_id])
         )
-        return format_html('<a href="{}">{} </a>', url, obj.fk_user_id)
-    
+        return format_html('<a href="{}">{} </a>', url, convert_id_int_to_str(obj.fk_user_id))
     instructor.short_description = "ID инструктора"
-    
-    full_name.short_description = "Фамилия ИО"
+    full_name.short_description = "Фамилия И.О."
     
     def get_readonly_fields(self, request, obj=None):
         if obj and request.user.position != User.POSITION_CHOICES[2][0]:   # This means that obj is not None, so you're in a change view
-            return ['profile_image_preview', "profile_image", 'login', 'last_name', 'first_name', 'middle_name', 'phone_number', 'fk_user', 'email', 'is_active']
+            return ['profile_image_preview', "profile_image", 'login', 'last_name', 'first_name', 'middle_name', 'phone_number', 'email', "instructor", 'fk_user', 'rank']
         else:    # This means you're in an add view
-            return ['profile_image_preview']
+            return ['profile_image_preview', 'instructor',]
     
     def get_fieldsets(self, request: HttpRequest, obj: Any | None = ...) -> List[Tuple[str | None, Dict[str, Any]]]:
         if request.user.position != User.POSITION_CHOICES[2][0]:
             return (
-        (None, {'fields': ('profile_image_preview', "profile_image", "login", "password",  "last_name", "first_name", "middle_name", "phone_number", "email", "is_active"),}),
+        (None, {'fields': ('profile_image_preview', "profile_image", "login", "password",  "last_name", "first_name", "middle_name", "rank", "phone_number", "email", "is_active"),}),
     )
         return (
-        (None, {'fields': ('profile_image_preview', "profile_image", "login", "password",  "last_name", "first_name", "middle_name", "phone_number", "fk_user", "email", "is_active"),}),
+        (None, {'fields': ('profile_image_preview', "profile_image", "login", "password",  "last_name", "first_name", "middle_name", "rank", "phone_number", "email", "instructor", "fk_user", "is_active"),}),
     )
     
     def save_model(self, request, obj, form, change):
@@ -407,6 +418,7 @@ class UserStudentAdmin(admin.ModelAdmin):
         form = super().get_form(request, obj, **kwargs)
         try:
             form.base_fields['profile_image'].label = ''
+            # form.base_fileds["profile_image"].initial_text = ""
         except:
             pass
         return form
@@ -414,8 +426,8 @@ class UserStudentAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         self.model._meta.verbose_name = "пользователя"
         if request.user.position == User.POSITION_CHOICES[0][0]:
-            return ('id', "full_name", "phone_number", "email", "position")
-        return ('id', "full_name", "phone_number", "email", "position","instructor")
+            return ('object_id', "full_name", 'rank', "phone_number", "email", "position")
+        return ('object_id', "full_name", 'rank', "phone_number", "email", "position","instructor")
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

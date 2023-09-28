@@ -10,6 +10,7 @@ import pandas as pd
 from django.db.models import Q
 from datetime import datetime
 from filters import MyDateRangeFilter
+from utils import convert_id_int_to_str
 # Register your models here.
 
 class SessionTabular(Session):
@@ -23,8 +24,10 @@ class SessionModelInline(admin.TabularInline):
     model._meta.verbose_name_plural = _("Сессии тренажеров")
     
     def object_id(self, obj):
-        return obj.id
-
+        return convert_id_int_to_str(obj.id)
+    
+    object_id.short_description = "ID"
+    
     def date_correct(self, obj):
         return obj.date.strftime('%d-%m-%Y')
     
@@ -52,6 +55,9 @@ class SessionModelInline(admin.TabularInline):
     
     object_id.short_description = "ID"
     
+    date_correct.short_description = "Дата"
+    
+    time_correct.short_description = "Время"   
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -88,7 +94,7 @@ class SessionAdmin(admin.ModelAdmin):
 
             excelOutput.append([full_name, obj.date.strftime('%d-%m-%Y'), str(obj.time), obj.scenario, (str(obj.result)+"%")])
 
-        df = pd.DataFrame(excelOutput,columns=["Фамилия ИО","Дата","Время","Сценарий","Результат"])
+        df = pd.DataFrame(excelOutput,columns=["Фамилия И.О.","Дата","Время","Сценарий","Результат"])
         response = HttpResponse( content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename="Otchet po sessiam {datetime.now().strftime("%Y.%m.%d")}.xlsx"'
         df.to_excel(response, index=False)
@@ -100,9 +106,9 @@ class SessionAdmin(admin.ModelAdmin):
         url = (
             reverse(f"admin:user_userstudent_change",args=[user.id])
         )
-        return format_html('<a href="{}">{} </a>', url, obj.id)
+        return format_html('<a href="{}">{} </a>', url, convert_id_int_to_str(obj.FK_user_id))
     
-    object_id.short_description = "ID"
+    object_id.short_description = "ID курсанта"
     
     def date_correct(self, obj):
         return obj.date.strftime('%d-%m-%Y')
@@ -138,10 +144,13 @@ class SessionAdmin(admin.ModelAdmin):
         user = User.objects.get(id = obj.FK_user_id)
         return user.last_name+" " + user.first_name +" "+ user.middle_name
     
-    full_name.short_description = "Фамилия ИО"
+    full_name.short_description = "Фамилия И.О."
+    
+    def rank(self, obj):
+        return obj.FK_user.rank
     
     def get_list_display(self, request):
-         return ('object_id', "full_name" ,'date_correct', 'time', 'scenario', "report")
+         return ('object_id', "full_name", 'date_correct', 'time_correct', 'scenario', "report")
      
     def get_queryset(self, request):
         qs = super().get_queryset(request)

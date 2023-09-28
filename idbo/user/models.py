@@ -38,11 +38,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=128, verbose_name='Пароль',validators=[MinLengthValidator(8)])
 
     # Внешний ключ на родительского пользователя (связь с самим собой)
-    fk_user = models.ForeignKey('self', on_delete=models.CASCADE, default=None, null=True, verbose_name='Родительский пользователь')
+    fk_user = models.ForeignKey('self', on_delete=models.CASCADE, default=None, null=True, verbose_name='Инструктор')
 
     # Выбор должности пользователя из списка POSITION_CHOICES
     position = models.CharField(max_length=20, choices=POSITION_CHOICES, verbose_name='Должность')
-
+    
+    # Звание пользователя
+    rank = models.CharField(max_length=50, default="", verbose_name="Звание")
+    
     # Флаг, указывающий, является ли пользователь администратором
     is_administrator = models.BooleanField(default=False, verbose_name='Администратор')
     
