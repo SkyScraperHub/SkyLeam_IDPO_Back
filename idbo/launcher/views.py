@@ -1,6 +1,6 @@
 from rest_framework import generics, exceptions, request, status
 from rest_framework.permissions import IsAuthenticated
-from .models import Session
+from .models import Session, Game
 import io
 from django.http import FileResponse, HttpResponseBadRequest
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -202,3 +202,11 @@ class UniqueScenariosSessionList(APIView):
         except: 
             pass
         return Response(data=unique_scenarios)
+
+class GamesList(APIView):
+    permission_classes(IsAuthenticated,)
+    authentication_classes= (JWTAuthentication,)
+    
+    def get(self,request):
+        games = Game.objects.get()
+        

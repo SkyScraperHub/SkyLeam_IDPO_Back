@@ -36,3 +36,24 @@ class Session(models.Model):
         except:
             print("Video don't exist")
         super(Session, self).delete(*args, **kwargs)
+
+class Game(models.Model):
+    # Уникальный идентификатор сессии
+    id = models.AutoField(primary_key=True)
+
+    # Внешний ключ, связывающий сессию с пользователем
+    name = models.TextField(verbose_name = "Название")
+    
+    file_name = models.TextField(verbose_name="Имя файла")
+
+    
+    def __str__(self):
+        return f" "
+    
+    def delete(self, *args, **kwargs):
+        try:
+            MinioClient.delete_object("/" +self.id +"/"+self.file_name)
+        # перед удалением, удаляем видео с сервера
+        except:
+            print("Video don't exist")
+        super(Session, self).delete(*args, **kwargs)
