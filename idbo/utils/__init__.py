@@ -1,4 +1,5 @@
 import string, random
+from services.s3 import MinioClient
 
 def get_random_string(length):
     # choose from all lowercase letter
@@ -8,3 +9,7 @@ def get_random_string(length):
 
 def convert_id_int_to_str(id):
     return "0"*(6 - len(str(id))) + str(id)
+
+def upload_to(instance, filename):
+
+    print(instance)

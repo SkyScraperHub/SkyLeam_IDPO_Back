@@ -1,6 +1,6 @@
 from django.contrib import admin
-from django.http import HttpResponse
-from .models import Session, Game
+from django.http import HttpRequest, HttpResponse
+from .models import Session, Game, GameImage
 from user.models import User
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -15,6 +15,16 @@ from datetime import datetime
 from filters import MyDateRangeFilter, ScenarioFilter, IdFilter
 from utils import convert_id_int_to_str
 # Register your models here.
+
+class GameImageAdmin(admin.StackedInline):
+    model = GameImage
+    
+    extra =0
+    def get_image_html(self, obj):
+        return format_html('<img src="{}" style="max-height:200px;"/>'.format(obj.file_name))
+
+    get_image_html.short_description = "Изображение"
+    readonly_fields = ('get_image_html',)
 
 class SessionTabular(Session):
     class Meta:
@@ -128,7 +138,12 @@ class SessionAdmin(admin.ModelAdmin):
         return False
     
     def report(self, obj):
-        highlighted_text = f"<a href={MinioClient.} target='_blank' download>Скачать тренажер</a>"
+        url = (
+            reverse("doc-generate")\
+            + "?"\
+            + urlencode({"pk":f"{obj.id}"})
+        )
+        highlighted_text = f"<a href={url} target='_blank' download>Скачать отчет</a>"
         return format_html(highlighted_text)
     
     report.short_description = "Файл отчет"
@@ -169,7 +184,7 @@ class GameProxyAdmin(Game):
 class GameAdmin(admin.ModelAdmin):
     
     # form = AdminAdminForm
-    
+    inlines = [GameImageAdmin]
     ordering = ("id", )
     
     actions = ['delete_selected']
@@ -183,7 +198,7 @@ class GameAdmin(admin.ModelAdmin):
     #         obj.delete()
     # delete_selected.short_description = "Удалить выбранных пользователей"
     fieldsets = (
-        (None, {'fields': ("name", "file"),}),
+        (None, {'fields': ("name", "exe_name", "file" ),}),
     )
     
     def add_view(self, request, form_url='', extra_context=None):
