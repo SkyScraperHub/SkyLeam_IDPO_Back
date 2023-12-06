@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from . import serializer
+from .serializer import GameSerializer
 from django.template import loader
 from django.http import HttpResponse
 from drf_yasg import openapi
@@ -15,6 +16,7 @@ from rest_framework import generics
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from datetime import datetime
+from django.core.serializers import serialize
 from services.s3 import MinioClient
 from rest_framework import parsers
 from utils import get_random_string, convert_id_int_to_str
@@ -208,5 +210,8 @@ class GamesList(APIView):
     authentication_classes= (JWTAuthentication,)
     
     def get(self,request):
-        games = Game.objects.get()
+        games = Game.objects.all()
+        serializer = GameSerializer(games, many=True)
+        return Response(serializer.data)
+
         

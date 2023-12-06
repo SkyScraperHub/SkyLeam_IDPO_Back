@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django.utils.http import urlencode
 import pandas as pd
-import os
+import os, uuid
 from services.s3 import MinioClient
 from django.db.models import Q
 from services.s3 import MinioClient
@@ -21,11 +21,11 @@ class GameImageAdmin(admin.StackedInline):
     
     extra =0
     def get_image_html(self, obj):
-        return format_html('<img src="{}" style="max-height:200px;"/>'.format(obj.file_name))
+        return format_html('<img src="{}" style="max-height:200px;"/>'.format(obj.img.url))
 
     get_image_html.short_description = "Изображение"
     readonly_fields = ('get_image_html',)
-
+    
 class SessionTabular(Session):
     class Meta:
         proxy = True
@@ -176,7 +176,7 @@ class GameProxyAdmin(Game):
     class Meta:
         proxy = True
         verbose_name = _("тренажер")
-        verbose_name_plural = _("Коллекция Тренажеров")
+        verbose_name_plural = _("Коллекции Тренажеров")
     def __str__(self):
         return  ""
     
@@ -189,16 +189,16 @@ class GameAdmin(admin.ModelAdmin):
     
     actions = ['delete_selected']
     
-    # def delete_selected(self, request, queryset):
-    #     self.model._meta.verbose_name = "Пользователь"
-    #     # Implement your custom deletion logic here
+    def delete_selected(self, request, queryset):
+        self.model._meta.verbose_name = "Тренажер"
+        # Implement your custom deletion logic here
 
-    #     # This could be directly deleting the objects
-    #     for obj in queryset:
-    #         obj.delete()
-    # delete_selected.short_description = "Удалить выбранных пользователей"
+        # This could be directly deleting the objects
+        for obj in queryset:
+            obj.delete()
+    delete_selected.short_description = "Удалить выбранные тренажеры"
     fieldsets = (
-        (None, {'fields': ("name", "exe_name", "file" ),}),
+        (None, {'fields': ("name", "exe_name", "description", "file" ),}),
     )
     
     def add_view(self, request, form_url='', extra_context=None):
@@ -216,10 +216,10 @@ class GameAdmin(admin.ModelAdmin):
         extra_context["history"] = False
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
     
-    def has_view_permission(self, request, obj=None) -> bool:
-        if request.user.position != User.POSITION_CHOICES[2][0]:
-            return False
-        return True
+    # def has_view_permission(self, request, obj=None) -> bool:
+    #     if request.user.position != User.POSITION_CHOICES[2][0]:
+    #         return False
+    #     return True
     
     def has_change_permission(self, request, obj=None):
         if request.user.position != User.POSITION_CHOICES[2][0]:
@@ -238,7 +238,7 @@ class GameAdmin(admin.ModelAdmin):
     
     def download_obj_button(self, obj):
 
-        highlighted_text = f"<a href={MinioClient.get_presigned_url(os.path.join(obj.id, obj.file_name))} target='_blank' download>Скачать тренажер</a>"
+        highlighted_text = f"<a href={obj.file.url} target='_blank' download>Скачать тренажер</a>"
         return format_html(highlighted_text)
     
     download_obj_button.short_description = 'Действие'
@@ -249,6 +249,11 @@ class GameAdmin(admin.ModelAdmin):
          return ("object_id", "name", 'download_obj_button')
     def save_model(self, request, obj, form, change):
         # Загрузка изображения на S3
+        # if hasattr(obj, "id"):
+        #     game = Game.objects.get(pk = obj.id)
+        # else:
+        #     pass
+        
         # try:
         #     user = User.objects.get(id = obj.id)
         #     if user.profile_image != "" and obj.profile_image == "":

@@ -23,3 +23,9 @@ class MinioClient:
     @staticmethod
     def delete_object(name: str):
         S3Clinet.remove_object(os.getenv("MINIO_BUCKET_MEDIA"), name)
+    
+    @staticmethod
+    def get_public_url(name):
+        url = os.getenv("MINIO_STORAGE_ENDPOINT")
+        bucket = os.getenv("MINIO_BUCKET_MEDIA")
+        return f"https://{url}/{bucket}/{name}"
