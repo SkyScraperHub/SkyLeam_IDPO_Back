@@ -1,0 +1,19 @@
+{% extends "admin/login.html" %}
+{% block content %}
+{{ block.super }}
+<style>
+  #download-links {
+    text-align: center; /* Выравнивание по центру */
+    margin-top: 20px;
+  }
+  #download-links a {
+    display: block; /* Каждая ссылка начинается с новой строки */
+    margin: 5px 0; /* Добавление отступа сверху и снизу для каждой ссылки */
+  }
+</style>
+<div id="download-links">
+  <a href="ссылка_для_скачивания_файла_1" download>Скачать файл 1</a>
+  <a href="ссылка_для_скачивания_файла_2" download>Скачать файл 2</a>
+  <a href="ссылка_для_скачивания_файла_3" download>Скачать файл 3</a>
+</div>
+{% endblock %}
