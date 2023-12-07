@@ -42,7 +42,7 @@ class Session(models.Model):
 
 def validate_file_extension( value):
     ext = value.name.split(".")[-1]  # Получаем расширение файла
-    valid_extensions = ['zip']  # Допустимые расширения
+    valid_extensions = ['zip', 'rar']  # Допустимые расширения
     if not ext.lower() in valid_extensions:
         raise ValidationError(f'Поддерживается следующий формат файла:{",".join(valid_extensions)}')
 def validate_version_format(value):
@@ -79,7 +79,8 @@ class Game(models.Model):
         if self.id:
             file = Game.objects.get(pk=self.id).file
             MinioClient.delete_object(file.name)
-            
+        # else:
+        #     MinioClient.upload_data(f"/game/{self.file.name}", self.file.file, self.file.size, num_parallel_uploads=30)
         # Вызов оригинального метода save
         super(Game, self).save(*args, **kwargs)
 

@@ -12,8 +12,8 @@ S3Clinet = Minio(
 class MinioClient:
         
     @staticmethod
-    def upload_data(name:str,  data, length = -1):
-        S3Clinet.put_object(os.getenv("MINIO_BUCKET_MEDIA"), name, data, length)
+    def upload_data(name:str,  data, length = -1, num_parallel_uploads = 3):
+        S3Clinet.put_object(os.getenv("MINIO_BUCKET_MEDIA"), name, data, length, num_parallel_uploads= num_parallel_uploads, part_size=10*1024*1024)
         
         
     @staticmethod
@@ -29,3 +29,4 @@ class MinioClient:
         url = os.getenv("MINIO_STORAGE_ENDPOINT")
         bucket = os.getenv("MINIO_BUCKET_MEDIA")
         return f"https://{url}/{bucket}/{name}"
+
