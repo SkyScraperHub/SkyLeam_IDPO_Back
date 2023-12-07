@@ -2,18 +2,56 @@
 {% block content %}
 {{ block.super }}
 <style>
-  #download-links {
-    text-align: center; /* Выравнивание по центру */
-    margin-top: 20px;
+  form {
+    margin-bottom: 30px;
   }
-  #download-links a {
-    display: block; /* Каждая ссылка начинается с новой строки */
-    margin: 5px 0; /* Добавление отступа сверху и снизу для каждой ссылки */
+  #download-section {
+    text-align: center;
+  }
+  .download-item {
+    margin-bottom: 15px;
+  }
+  .download-button {
+    display: inline-block;
+    margin-left: 10px;
+    text-decoration: none;
+    color: #fff; /* Белый текст */
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    transition: background-color .15s ease-in-out;
+    border: none;
+  }
+
+  /* Стили для светлой темы */
+  #download-section.light-background .download-button {
+    background-color: #79aec8; /* Светло-синий фон до наведения */
+  }
+  #download-section.light-background .download-button:hover {
+    background-color: #609ab6; /* Более темный синий фон при наведении */
+  }
+
+  /* Стили для темной темы */
+  #download-section.dark-background .download-button {
+    background-color: #264b5d; /* Темно-синий фон до наведения */
+  }
+  #download-section.dark-background .download-button:hover {
+    background-color: #609ab6; /* Более темный синий фон при наведении */
   }
 </style>
-<div id="download-links">
-  <a href="ссылка_для_скачивания_файла_1" download>Скачать VR-версию</a>
-  <a href="ссылка_для_скачивания_файла_2" download>Скачать Android-версию</a>
-  <a href="ссылка_для_скачивания_файла_3" download>Скачать лаунчер</a>
+<div id="download-section" class="light-background"> <!-- тут можно заменить на темную, как автоматизировать я не догадался-->
+  <div class="download-item">
+    <span>Описание файла 1</span>
+    <a href="ссылка_для_скачивания_файла_1" class="download-button" download>Скачать</a>
+  </div>
+  <div class="download-item">
+    <span>Описание файла 2</span>
+    <a href="ссылка_для_скачивания_файла_2" class="download-button" download>Скачать</a>
+  </div>
+  <div class="download-item">
+    <span>Описание файла 3</span>
+    <a href="ссылка_для_скачивания_файла_3" class="download-button" download>Скачать</a>
+  </div>
 </div>
 {% endblock %}
