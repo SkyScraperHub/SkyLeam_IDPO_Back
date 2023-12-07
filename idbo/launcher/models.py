@@ -56,7 +56,7 @@ class Game(models.Model):
 
     # Внешний ключ, связывающий сессию с пользователем
     name = models.CharField(max_length=100, verbose_name = "Название")
-    file = models.FileField(upload_to=upload_to, verbose_name="Архив", default=None, validators=[validate_file_extension, ])
+    file = models.FileField( upload_to=upload_to, verbose_name="Архив", default=None, validators=[validate_file_extension, ])
     exe_name = models.CharField(max_length=100, verbose_name="Имя exe файла")
     description = models.TextField(verbose_name="Описание", default="",null=True)
     version = models.TextField(verbose_name="Версия", validators=[validate_file_extension,], null=False, default="0.0.1" )
