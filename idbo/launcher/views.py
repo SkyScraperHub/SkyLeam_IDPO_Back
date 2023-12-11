@@ -123,40 +123,39 @@ def DocGenerate(request):
         return HttpResponseBadRequest("File not found.")
     pdf_form = PyPDFForm(file_path)
     
-    pdf_form.elements["id"].font = "Montserrat-SemiBold"
-    pdf_form.elements["id"].font_size = 5
+    pdf_form.elements["text_1uswt"].font = "Montserrat-SemiBold"
+    pdf_form.elements["text_1uswt"].font_size = 5
     
-    pdf_form.elements["full_name"].font = "Montserrat-SemiBold"
-    pdf_form.elements["full_name"].font_size = 10
+    pdf_form.elements["text_2pgvl"].font = "Montserrat-SemiBold"
+    pdf_form.elements["text_2pgvl"].font_size = 10
     
-    pdf_form.elements["scenario"].font = "Montserrat-Regular"
-    pdf_form.elements["scenario"].font_size = 5
+    # pdf_form.elements["scenario"].font = "Montserrat-Regular"
+    # pdf_form.elements["scenario"].font_size = 5
     
-    pdf_form.elements["hour"].font = "Montserrat-SemiBold"
-    pdf_form.elements["hour"].font_size = 5
+    pdf_form.elements["text_3pzvw"].font = "Montserrat-SemiBold"
+    pdf_form.elements["text_3pzvw"].font_size = 5
     
-    pdf_form.elements["minute"].font = "Montserrat-SemiBold"
-    pdf_form.elements["minute"].font_size = 5
+    pdf_form.elements["text_12tyjl"].font = "Montserrat-SemiBold"
+    pdf_form.elements["text_12tyjl"].font_size = 5
     
-    pdf_form.elements["score"].font = "Montserrat-SemiBold"
-    pdf_form.elements["score"].font_size = 5
+    pdf_form.elements["text_7rcoo"].font = "Montserrat-SemiBold"
+    pdf_form.elements["text_7rcoo"].font_size = 5
     
-    pdf_form.elements["rez_word"].font = "Montserrat-SemiBold"
-    pdf_form.elements["rez_word"].font_size = 5
+    pdf_form.elements["text_8cjve"].font = "Montserrat-SemiBold"
+    pdf_form.elements["text_8cjve"].font_size = 5
     
-    pdf_form.elements["date"].font = "Montserrat-SemiBold"
-    pdf_form.elements["date"].font_size = 5
+    pdf_form.elements["text_11qvd"].font = "Montserrat-SemiBold"
+    pdf_form.elements["text_11qvd"].font_size = 5
     id = convert_id_int_to_str(session.FK_user_id)
     date = session.date.strftime('%d.%m.%Y')
     pdf_form.fill({
-        "id": id,
-        "full_name": f"{session.FK_user.last_name} {session.FK_user.first_name} {session.FK_user.middle_name}",
-        "scenario": session.scenario,
-        "hour": session.time.strftime('%M'),
-        "minute": session.time.strftime('%S'),
-        "score": str(session.result),
-        "rez_word": "" if session.result > 65 else "не",
-        "date":date,
+        "text_1uswt": id,
+        "text_2pgvl": f"{session.FK_user.last_name} {session.FK_user.first_name} {session.FK_user.middle_name}",
+        "text_3pzvw": session.time.strftime('%M'),
+        "text_12tyjl": session.time.strftime('%S'),
+        "text_7rcoo": str(session.result),
+        "text_8cjve": "" if session.result > 0 else "не",
+        "text_11qvd":date,
         
     })
 
