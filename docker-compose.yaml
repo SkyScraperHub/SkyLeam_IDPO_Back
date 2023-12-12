@@ -1,28 +1,43 @@
 version: '3.8'
 
 services:
+
   web:
     build: ./idbo
     container_name: idbo-back
     expose:
       - 31022
     ports:
-      - 30945:31022
-    depends_on:
-      - redis
+      - 30946:31022
+    # depends_on:
+      # - redis
+
     restart: always
-  redis:
-    image: redis:alpine
-    container_name: idbo-redis
-    expose:
-      - 6379
-    ports:
-      - 6379:6379
-    restart: always
-  celery:
-    container_name: idbo-celery
-    build: ./idbo
-    command: celery -A idbo worker -B --loglevel=INFO
-    depends_on:
-      - redis
-    restart: always
+    networks:
+        - idbo-net
+  # redis:
+  #   image: redis:alpine
+  #   container_name: idbo-redis
+  #   expose:
+  #     - 6379
+  #   ports:
+  #     - 49104:6379
+  #   restart: always
+  #   networks:
+  #       - idbo-net
+  # celery:
+  #   container_name: idbo-celery
+  #   build: ./idbo
+  #   command: celery -A idbo worker -B --loglevel=INFO
+  #   depends_on:
+  #     - redis
+  #   restart: always
+  #   networks:
+  #       - idbo-net
+
+
+
+networks:
+  idbo-net:
+    driver: bridge
+    

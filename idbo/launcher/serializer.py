@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Session
+from .models import Session, Game, GameImage
 
 
 
@@ -19,3 +19,23 @@ class SessionSerializer(serializers.ModelSerializer):
         model = Session
        
         fields = ("id","date", "time", "scenario", "result")
+
+class GameImageSerializer(serializers.HyperlinkedModelSerializer):
+    
+    class Meta:
+        model = GameImage
+        fields = ("img",  )
+        
+class GameSerializer(serializers.ModelSerializer):
+    
+    # user_id = serializers.UUIDField(write_only=True)
+    # uuid = serializers.UUIDField(read_only = True)
+    images = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Game
+       
+        fields = ("id","name", "exe_name", "images", "version", "file", "description")
+    
+    def get_images(self, obj):
+        return [image.img.url for image in obj.images.all()]
