@@ -172,6 +172,24 @@ class SessionAdmin(admin.ModelAdmin):
             return qs.filter(Q(FK_user_id__in=students))
         return qs
     
+    actions = ['delete_sessions_with_videos']
+
+    def delete_sessions_with_videos(self, request, queryset):
+        for session in queryset:
+            # Здесь вы можете реализовать логику удаления видеофайла
+            video_url = session.video
+            if video_url:
+                try:
+                    MinioClient.delete_object(f"public/{session.FK_user_id}/{session.video}")
+                except Exception as e:
+                    # Логирование или обработка исключения
+                    pass
+            
+            # Удаление самой сессии
+            session.delete()
+    
+    delete_sessions_with_videos.short_description = "Удалить выбранные сессии и связанные с ними видео"
+    
 class GameProxyAdmin(Game):
     class Meta:
         proxy = True
