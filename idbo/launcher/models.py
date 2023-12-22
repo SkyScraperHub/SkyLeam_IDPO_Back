@@ -60,7 +60,7 @@ class Game(models.Model):
     exe_name = models.CharField(max_length=100, verbose_name="Имя exe файла")
     description = models.TextField(verbose_name="Описание", default="",null=True)
     version = models.CharField(max_length=100, verbose_name="Версия", validators=[validate_version_format,], null=False, default="0.0.1" )
-
+    use_tcp = models.BooleanField(default=False, verbose_name="Использовать TCP?")
     
     def __str__(self):
         return f" "
