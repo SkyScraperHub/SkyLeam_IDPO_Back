@@ -12,7 +12,7 @@ from services.s3 import MinioClient
 from django.db.models import Q
 from services.s3 import MinioClient
 from datetime import datetime
-from filters import MyDateRangeFilter, ScenarioFilter, IdFilter
+from filters import MyDateRangeFilter, ScenarioFilter, UserIdFilter
 from utils import convert_id_int_to_str
 from django.core.exceptions import ValidationError
 from .forms import GameAdminForm
@@ -94,9 +94,9 @@ class SessionProxyAdmin(Session):
 @admin.register(SessionProxyAdmin)
 class SessionAdmin(admin.ModelAdmin):
     
-    list_filter = (('date', MyDateRangeFilter),("id", IdFilter), ("scenario", ScenarioFilter),)
+    list_filter = (('date', MyDateRangeFilter),("FK_user_id", UserIdFilter), ("scenario", ScenarioFilter),)
     
-    ordering = ("id", )
+    ordering = ("-date", "FK_user_id",)
     
     actions = ["get_session_report"]
     
