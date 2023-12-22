@@ -14,6 +14,8 @@ from services.s3 import MinioClient
 from datetime import datetime
 from filters import MyDateRangeFilter, ScenarioFilter, IdFilter
 from utils import convert_id_int_to_str
+from django.core.exceptions import ValidationError
+from .forms import GameAdminForm
 # Register your models here.
 
 class GameImageAdmin(admin.StackedInline):
@@ -248,6 +250,16 @@ class GameAdmin(admin.ModelAdmin):
          self.model._meta.verbose_name = "тренажера"
          return ("object_id", "name", 'download_obj_button')
     def save_model(self, request, obj, form, change):
+        if change:  # Проверка, если это изменение существующего объекта
+            original_obj = Game.objects.get(id=obj.id)
+            
+            # Проверить, изменилась ли версия. Сравнение строк, так как теперь это TextField.
+            if original_obj.file != obj.file and original_obj.version.strip() == obj.version.strip():
+                # Если файл и версия не изменились, выдать ошибку
+                raise ValidationError(_('Пожалуйста, обновите версию перед загрузкой обновленного файла.'))
+        
+        # Продолжить сохранение, как обычно
+        super().save_model(request, obj, form, change)
         # Загрузка изображения на S3
         # if hasattr(obj, "id"):
         #     game = Game.objects.get(pk = obj.id)
@@ -282,7 +294,7 @@ class GameAdmin(admin.ModelAdmin):
         # obj.fk_user = None
         # obj.is_staff = True 
         
-        super().save_model(request, obj, form, change)
+        #super().save_model(request, obj, form, change)
     
     def object_id(self, obj):
         return convert_id_int_to_str(obj.id)
