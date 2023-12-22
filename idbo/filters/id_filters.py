@@ -22,8 +22,7 @@ import datetime
 
 import django
 
-
-class IdFilter(BaseRangeFilter):
+class BaseIdFilter(BaseRangeFilter):
     _request_key = "DJANGO_RANGEFILTER_ADMIN_JS_LIST"
 
     def choices(self, changelist):
@@ -49,15 +48,8 @@ class IdFilter(BaseRangeFilter):
 
         return query_params
 
-    def queryset(self, request, queryset):
-        if self.form.is_valid():
-            validated_data = dict(self.form.cleaned_data.items())
-            if validated_data:
-                return queryset.filter(id=validated_data["id__range__gte"])
-        return queryset
-
     def get_template(self):
-
+    
         return "rangefilter/numeric_filter.html"
 
     template = property(get_template)
@@ -100,3 +92,23 @@ class IdFilter(BaseRangeFilter):
     def get_form(self, _request):
         form_class = self._get_form_class()
         return form_class(self.used_parameters or None)
+
+
+# Наследование от BaseIdFilter
+class IdFilter(BaseIdFilter):
+    def queryset(self, request, queryset):
+        if self.form.is_valid():
+            validated_data = dict(self.form.cleaned_data.items())
+            if validated_data:
+                return queryset.filter(id=validated_data["id__range__gte"])
+        return queryset
+
+# Наследование от BaseIdFilter
+class UserIdFilter(BaseIdFilter):
+    def queryset(self, request, queryset):
+        if self.form.is_valid():
+            validated_data = dict(self.form.cleaned_data.items())
+            if validated_data:
+                return queryset.filter(FK_user_id=validated_data["FK_user_id__range__gte"])
+        return queryset
+
