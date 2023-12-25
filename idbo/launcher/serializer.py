@@ -35,7 +35,7 @@ class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
        
-        fields = ("id","name", "exe_name", "images", "version", "file", "description")
+        fields = ("id","name", "exe_name", "images", "version", "file", "description","use_tcp")
     
     def get_images(self, obj):
         return [image.img.url for image in obj.images.all()]

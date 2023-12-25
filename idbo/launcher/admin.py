@@ -218,7 +218,7 @@ class GameAdmin(admin.ModelAdmin):
             obj.delete()
     delete_selected.short_description = "Удалить выбранные тренажеры"
     fieldsets = (
-        (None, {'fields': ("name", "exe_name", "description", "file" ),}),
+        (None, {'fields': ("name", "exe_name","version", "description", "file","use_tcp"),}),
     )
     
     def add_view(self, request, form_url='', extra_context=None):
