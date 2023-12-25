@@ -35,7 +35,7 @@ class SessionList(generics.ListAPIView):
     
     def list(self, request):
        
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset().order_by('-date'))
         queryset = queryset.filter(FK_user=request.auth["id"])
         date_filter = request.query_params.get('date')
         scenario_filter = request.query_params.get('scenario')
