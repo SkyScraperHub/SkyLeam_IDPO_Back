@@ -275,6 +275,9 @@ class GameAdmin(admin.ModelAdmin):
             if original_obj.file != obj.file and original_obj.version.strip() == obj.version.strip():
                 # Если файл и версия не изменились, выдать ошибку
                 raise ValidationError(_('Пожалуйста, обновите версию перед загрузкой обновленного файла.'))
+            if original_obj.file != obj.file:
+                file = Game.objects.get(pk=original_obj.id).file
+                MinioClient.delete_object(file.name)
         
         # Продолжить сохранение, как обычно
         super().save_model(request, obj, form, change)

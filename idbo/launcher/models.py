@@ -76,9 +76,9 @@ class Game(models.Model):
     def save(self, *args, **kwargs):
         # Ваша кастомная логика перед сохранением
         # Например, изменение атрибутов
-        if self.id:
-            file = Game.objects.get(pk=self.id).file
-            MinioClient.delete_object(file.name)
+        # if self.id:
+        #     file = Game.objects.get(pk=self.id).file
+        #     MinioClient.delete_object(file.name)
         # else:
         #     MinioClient.upload_data(f"/game/{self.file.name}", self.file.file, self.file.size, num_parallel_uploads=30)
         # Вызов оригинального метода save
