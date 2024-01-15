@@ -7,21 +7,24 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # Кастомный класс для получения токена доступа
+
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        
+
         if serializer.is_valid(raise_exception=True):
             user = serializer.user
             # Проверка, что пользователь - студент
-            if user.position != 'student':
+            if user.position != "student":
                 return Response(
                     {"details": "Only students can log in"},
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
             tokens = serializer.validated_data
             return Response(
-                {   "firstName": user.first_name,
+                {
+                    "firstName": user.first_name,
                     "middleName": "" if user.middle_name is None else user.middle_name,
                     "lastName": user.last_name,
                     "access": tokens["access"],
@@ -42,6 +45,11 @@ class CheckUser(APIView):
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
             if type(e).__name__ == "InvalidToken":
-                return Response({"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(
+                    {"error": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED
+                )
             else:
-                return Response({"error": "Something went wrong"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(
+                    {"error": "Something went wrong"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )

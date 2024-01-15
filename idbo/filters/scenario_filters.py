@@ -12,6 +12,7 @@ from django.utils.encoding import force_str
 from django.utils.html import format_html
 from rangefilter.filters import BaseRangeFilter, OnceCallMedia
 from django.utils.translation import gettext_lazy as _
+
 try:
     import pytz
 except ImportError:
@@ -36,7 +37,9 @@ class ScenarioFilter(BaseRangeFilter):
             "system_name": force_str(
                 slugify(self.title) if slugify(self.title) else id(self.title)
             ),
-            "query_string": changelist.get_query_string({}, remove=self._get_expected_fields()),
+            "query_string": changelist.get_query_string(
+                {}, remove=self._get_expected_fields()
+            ),
         }
 
     def _get_expected_fields(self):
@@ -56,11 +59,12 @@ class ScenarioFilter(BaseRangeFilter):
             validated_data = dict(self.form.cleaned_data.items())
             print(validated_data)
             if validated_data:
-                return queryset.filter(scenario__icontains=validated_data["scenario__range__gte"])
+                return queryset.filter(
+                    scenario__icontains=validated_data["scenario__range__gte"]
+                )
         return queryset
 
     def get_template(self):
-
         return "rangefilter/numeric_filter.html"
 
     template = property(get_template)
@@ -71,11 +75,12 @@ class ScenarioFilter(BaseRangeFilter):
                 (
                     self.lookup_kwarg_gte,
                     forms.CharField(
-                        min_length = 1,
-                        max_length = 200,
+                        min_length=1,
+                        max_length=200,
                         label="",
                         widget=AdminTextInputWidget(
-                            attrs={"placeholder": _("Сценарий")}),
+                            attrs={"placeholder": _("Сценарий")}
+                        ),
                         localize=True,
                         required=False,
                         initial=self.default_gte,
@@ -87,8 +92,9 @@ class ScenarioFilter(BaseRangeFilter):
     def _get_form_class(self):
         fields = self._get_form_fields()
 
-        form_class = type(str("DateRangeForm"), (forms.BaseForm,), {
-                          "base_fields": fields})
+        form_class = type(
+            str("DateRangeForm"), (forms.BaseForm,), {"base_fields": fields}
+        )
 
         # lines below ensure that the js static files are loaded just once
         # even if there is more than one DateRangeFilter in use
