@@ -10,6 +10,7 @@ from django.utils.encoding import force_str
 from django.utils.html import format_html
 from rangefilter.filters import BaseRangeFilter, OnceCallMedia
 from django.utils.translation import gettext_lazy as _
+
 try:
     import pytz
 except ImportError:
@@ -55,7 +56,9 @@ class MyDateRangeFilter(BaseRangeFilter):
             "system_name": force_str(
                 slugify(self.title) if slugify(self.title) else id(self.title)
             ),
-            "query_string": changelist.get_query_string({}, remove=self._get_expected_fields()),
+            "query_string": changelist.get_query_string(
+                {}, remove=self._get_expected_fields()
+            ),
         }
 
     def _get_expected_fields(self):
@@ -72,18 +75,20 @@ class MyDateRangeFilter(BaseRangeFilter):
             data = self.make_dt_aware(
                 datetime.datetime.combine(date_value_gte, datetime.time.min),
                 self.get_timezone(request),
-                )
+            )
             if self.field_path == "date":
                 query_params["{0}".format(self.field_path)] = data
             else:
-                query_params["{0}__date".format(self.field_path)] = data 
+                query_params["{0}__date".format(self.field_path)] = data
         return query_params
 
     def queryset(self, request, queryset):
         if self.form.is_valid():
             validated_data = dict(self.form.cleaned_data.items())
             if validated_data:
-                return queryset.filter(**self._make_query_filter(request, validated_data))
+                return queryset.filter(
+                    **self._make_query_filter(request, validated_data)
+                )
         return queryset
 
     def get_template(self):
@@ -116,7 +121,9 @@ class MyDateRangeFilter(BaseRangeFilter):
     def _get_form_class(self):
         fields = self._get_form_fields()
 
-        form_class = type(str("DateRangeForm"), (forms.BaseForm,), {"base_fields": fields})
+        form_class = type(
+            str("DateRangeForm"), (forms.BaseForm,), {"base_fields": fields}
+        )
 
         # lines below ensure that the js static files are loaded just once
         # even if there is more than one DateRangeFilter in use

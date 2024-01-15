@@ -40,4 +40,3 @@ services:
 networks:
   idbo-net:
     driver: bridge
-    

@@ -5,19 +5,30 @@ from django.contrib.auth.hashers import make_password
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import mark_safe
 import re
+
+
 class AdminAdminForm(forms.ModelForm):
-    middle_name = forms.CharField( max_length=250, required=False, label = "Отчество")
-    email = forms.EmailField(required=False, label = "Почта")
-    phone_number = forms.CharField(required=False, label='Номер телефона')
+    middle_name = forms.CharField(max_length=250, required=False, label="Отчество")
+    email = forms.EmailField(required=False, label="Почта")
+    phone_number = forms.CharField(required=False, label="Номер телефона")
+
     class Meta:
         model = User
 
         fields = (
-        "profile_image",
-        "last_name", "first_name", "middle_name", "login", "password", "phone_number", "email", "is_active", "login")
+            "profile_image",
+            "last_name",
+            "first_name",
+            "middle_name",
+            "login",
+            "password",
+            "phone_number",
+            "email",
+            "is_active",
+            "login",
+        )
         model._meta.verbose_name = _("Пользователь")
-    
-    
+
     def clean(self):
         cleaned_data = super().clean()
         # try:
@@ -32,8 +43,11 @@ class AdminAdminForm(forms.ModelForm):
         # if len(password) < 8:
         #     raise ValidationError(_('Ошибка'), code="Пароль слишком маленький")
         return cleaned_data
+
     @staticmethod
     def validate_phone_number(value):
-      if not re.match(r'^\+7[0-9]{10}$', value):
-          raise ValidationError(_('Введен неверный номер телефона, пример +79999999999'))
-      return value
+        if not re.match(r"^\+7[0-9]{10}$", value):
+            raise ValidationError(
+                _("Введен неверный номер телефона, пример +79999999999")
+            )
+        return value

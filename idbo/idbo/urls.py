@@ -19,24 +19,27 @@ from django.urls import path, include
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view as swagger_get_schema_view
 from . import view_main
+
 schema_view = swagger_get_schema_view(
     openapi.Info(
-        title = "API",
-        default_version = "0.5",
-        description = "Api documentation of App",
+        title="API",
+        default_version="0.5",
+        description="Api documentation of App",
     ),
-    public = True
+    public=True,
 )
 
 urlpatterns = [
     path("", view_main.redirect_2_admin),
     path("admin/", admin.site.urls),
-    path("api/", include(
+    path(
+        "api/",
+        include(
             [
-            path("", include("user.urls")),
-            path("", include("launcher.urls")),
-            path("docs", schema_view().with_ui("swagger", cache_timeout=0)),
-            ])
+                path("", include("user.urls")),
+                path("", include("launcher.urls")),
+                path("docs", schema_view().with_ui("swagger", cache_timeout=0)),
+            ]
         ),
-    
+    ),
 ]

@@ -9,8 +9,8 @@ WORKDIR /usr/app
 COPY . .
 RUN pip install -r requirements.txt
 RUN ls -al
-RUN python manage.py collectstatic --noinput 
+RUN python manage.py collectstatic --noinput
 RUN python manage.py makemigrations \
     && python manage.py migrate
 RUN python manage.py createsuperuser --noinput || true
-CMD python manage.py runserver 0.0.0.0.:31022
+CMD python manage.py runserver 0.0.0.0:31022
