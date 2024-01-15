@@ -137,12 +137,6 @@ class GameImage(models.Model):
         verbose_name_plural = "Изображения"
 
     def save(self, *args, **kwargs):
-        # Ваша кастомная логика перед сохранением
-        # Например, изменение атрибутов
-        if self.id:
-            img = GameImage.objects.get(pk=self.id).img
-            MinioClient.delete_object(img.name)
-
         # Вызов оригинального метода save
         super(GameImage, self).save(*args, **kwargs)
 

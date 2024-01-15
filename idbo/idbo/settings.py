@@ -20,10 +20,10 @@ from PyPDFForm import PyPDFForm
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 PyPDFForm.register_font(
-    "Montserrat-Regular", "./resources/Montserrat//static/Montserrat-Regular.ttf"
+    "Montserrat-Regular", "./resources/Montserrat/static/Montserrat-Regular.ttf"
 )
 PyPDFForm.register_font(
-    "Montserrat-SemiBold", "./resources/Montserrat//static/Montserrat-SemiBold.ttf"
+    "Montserrat-SemiBold", "./resources/Montserrat/static/Montserrat-SemiBold.ttf"
 )
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
