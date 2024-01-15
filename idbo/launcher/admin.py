@@ -38,6 +38,8 @@ class SessionModelInline(admin.TabularInline):
     readonly_fields = ("object_id", "date_correct", "time_correct", "scenario", "report", "video_url")
     model._meta.verbose_name_plural = _("Сессии тренажеров")
     
+    ordering = ('-date',)  # Сортировка по дате
+    
     def object_id(self, obj):
         return convert_id_int_to_str(obj.id)
     
