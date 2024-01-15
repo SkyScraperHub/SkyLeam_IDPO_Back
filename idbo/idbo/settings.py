@@ -32,9 +32,7 @@ PyPDFForm.register_font(
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-# dotenv.load_dotenv()
-
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     dotenv.load_dotenv(dotenv.find_dotenv(".env.dev"))
