@@ -14,65 +14,85 @@ from services.s3 import MinioClient
 from datetime import datetime
 from filters import MyDateRangeFilter, ScenarioFilter, UserIdFilter
 from utils import convert_id_int_to_str
+
+
 from django.core.exceptions import ValidationError
 from .forms import GameAdminForm
+
 # Register your models here.
+
 
 class GameImageAdmin(admin.StackedInline):
     model = GameImage
-    
-    extra =0
+
+    extra = 0
+
     def get_image_html(self, obj):
-        return format_html('<img src="{}" style="max-height:200px;"/>'.format(obj.img.url))
+        return format_html(
+            '<img src="{}" style="max-height:200px;"/>'.format(obj.img.url)
+        )
 
     get_image_html.short_description = "Изображение"
-    readonly_fields = ('get_image_html',)
-    
+    readonly_fields = ("get_image_html",)
+
+
 class SessionTabular(Session):
     class Meta:
         proxy = True
-        
+
+
 class SessionModelInline(admin.TabularInline):
     model = SessionTabular
-    fields = ("object_id", "date_correct", "time_correct", "scenario", "report", "video_url")
-    readonly_fields = ("object_id", "date_correct", "time_correct", "scenario", "report", "video_url")
+    fields = (
+        "object_id",
+        "date_correct",
+        "time_correct",
+        "scenario",
+        "report",
+        "video_url",
+    )
+    readonly_fields = (
+        "object_id",
+        "date_correct",
+        "time_correct",
+        "scenario",
+        "report",
+        "video_url",
+    )
     model._meta.verbose_name_plural = _("Сессии тренажеров")
-    
+
     def object_id(self, obj):
         return convert_id_int_to_str(obj.id)
-    
+
     object_id.short_description = "ID"
-    
+
     def date_correct(self, obj):
-        return obj.date.strftime('%d-%m-%Y')
-    
+        return obj.date.strftime("%d-%m-%Y")
+
     def time_correct(self, obj):
         return str(obj.time)
-    
+
     def report(self, obj):
-        url = (
-            reverse("doc-generate")\
-            + "?"\
-            + urlencode({"pk":f"{obj.id}"})
-        )
+        url = reverse("doc-generate") + "?" + urlencode({"pk": f"{obj.id}"})
         highlighted_text = f"<a href={url} target='_blank' download>Скачать отчет</a>"
         return format_html(highlighted_text)
-    
+
     def video_url(self, obj):
         url = reverse("session-video", args=[obj.id])
         # highlighted_text = f"<a href='{url}' target='_blank' onclick='window.open(`{url}`, `_blank`)'>Просмотреть видео</a>"
         highlighted_text = f"<a href='{url}' target='_blank'>Просмотреть видео</a>"
         return format_html(highlighted_text)
-    
+
     report.short_description = "Файл отчет"
-    
+
     video_url.short_description = "Видеоматериал"
-    
+
     object_id.short_description = "ID"
-    
+
     date_correct.short_description = "Дата"
-    
-    time_correct.short_description = "Время"   
+
+    time_correct.short_description = "Время"
+
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -81,55 +101,78 @@ class SessionModelInline(admin.TabularInline):
 
     def has_change_permission(self, request, obj=None):
         return False
-    
-    
+
+
 class SessionProxyAdmin(Session):
     class Meta:
         proxy = True
         verbose_name = _("сессию")
         verbose_name_plural = _("Коллекции Сессий")
-    def __str__ (self):
+
+    def __str__(self):
         return ""
-    
+
+
 @admin.register(SessionProxyAdmin)
 class SessionAdmin(admin.ModelAdmin):
-    
-    list_filter = (('date', MyDateRangeFilter),("FK_user_id", UserIdFilter), ("scenario", ScenarioFilter),)
-    
-    ordering = ("-date", "FK_user_id",)
-    
+    list_filter = (
+        ("date", MyDateRangeFilter),
+        ("FK_user_id", UserIdFilter),
+        ("scenario", ScenarioFilter),
+    )
+
+    ordering = (
+        "-date",
+        "FK_user_id",
+    )
+
     actions = ["get_session_report"]
-    
+
     @admin.action(description="Выгрузить файл-отчет сессий")
-    def get_session_report(self,request,queryset):
+    def get_session_report(self, request, queryset):
         excelOutput = []
         for obj in queryset:
             user = User.objects.get(id=obj.FK_user_id)
-            full_name = user.last_name+" " + user.first_name +" "+ user.middle_name
+            full_name = user.last_name + " " + user.first_name + " " + user.middle_name
 
-            excelOutput.append([full_name, obj.date.strftime('%d-%m-%Y'), str(obj.time), obj.scenario, (str(obj.result)+"%")])
+            excelOutput.append(
+                [
+                    full_name,
+                    obj.date.strftime("%d-%m-%Y"),
+                    str(obj.time),
+                    obj.scenario,
+                    (str(obj.result) + "%"),
+                ]
+            )
 
-        df = pd.DataFrame(excelOutput,columns=["Фамилия И.О.","Дата","Время","Сценарий","Результат"])
-        response = HttpResponse( content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = f'attachment; filename="Otchet po sessiam {datetime.now().strftime("%Y.%m.%d")}.xlsx"'
+        df = pd.DataFrame(
+            excelOutput,
+            columns=["Фамилия И.О.", "Дата", "Время", "Сценарий", "Результат"],
+        )
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response[
+            "Content-Disposition"
+        ] = f'attachment; filename="Otchet po sessiam {datetime.now().strftime("%Y.%m.%d")}.xlsx"'
         df.to_excel(response, index=False)
         # messages.add_message(request, messages.INFO, 'Перезагрузите страницу, чтобы увидеть обновления.')
         return response
-    
+
     def object_id(self, obj):
         user = User.objects.get(id=obj.FK_user_id)
-        url = (
-            reverse(f"admin:user_userstudent_change",args=[user.id])
+        url = reverse(f"admin:user_userstudent_change", args=[user.id])
+        return format_html(
+            '<a href="{}">{} </a>', url, convert_id_int_to_str(obj.FK_user_id)
         )
-        return format_html('<a href="{}">{} </a>', url, convert_id_int_to_str(obj.FK_user_id))
-    
+
     object_id.short_description = "ID курсанта"
-    
+
     def date_correct(self, obj):
-        return obj.date.strftime('%d-%m-%Y')
-    
+        return obj.date.strftime("%d-%m-%Y")
+
     date_correct.short_description = "Дата"
-    
+
     def has_add_permission(self, request):
         return False
 
@@ -138,43 +181,48 @@ class SessionAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-    
+
     def report(self, obj):
-        url = (
-            reverse("doc-generate")\
-            + "?"\
-            + urlencode({"pk":f"{obj.id}"})
-        )
+        url = reverse("doc-generate") + "?" + urlencode({"pk": f"{obj.id}"})
         highlighted_text = f"<a href={url} target='_blank' download>Скачать отчет</a>"
         return format_html(highlighted_text)
-    
+
     report.short_description = "Файл отчет"
-    
+
     def time_correct(self, obj):
         return str(obj.time)
-    
+
     time_correct.short_description = "Время"
-    
+
     def full_name(self, obj):
-        user = User.objects.get(id = obj.FK_user_id)
-        return user.last_name+" " + user.first_name +" "+ user.middle_name
-    
+        user = User.objects.get(id=obj.FK_user_id)
+        return user.last_name + " " + user.first_name + " " + user.middle_name
+
     full_name.short_description = "Фамилия И.О."
-    
+
     def rank(self, obj):
         return obj.FK_user.rank
-    
+
     def get_list_display(self, request):
-         return ('object_id', "full_name", 'date_correct', 'time_correct', 'scenario', "report")
-     
+        return (
+            "object_id",
+            "full_name",
+            "date_correct",
+            "time_correct",
+            "scenario",
+            "report",
+        )
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        if request.user.position ==  User.POSITION_CHOICES[0][0]: 
-            students = User.objects.filter(fk_user=request.user.id).values_list("id", flat=True)
+        if request.user.position == User.POSITION_CHOICES[0][0]:
+            students = User.objects.filter(fk_user=request.user.id).values_list(
+                "id", flat=True
+            )
             return qs.filter(Q(FK_user_id__in=students))
         return qs
-    
-    actions = ['delete_sessions_with_videos']
+
+    actions = ["delete_sessions_with_videos"]
 
     def delete_sessions_with_videos(self, request, queryset):
         for session in queryset:
@@ -182,33 +230,39 @@ class SessionAdmin(admin.ModelAdmin):
             video_url = session.video
             if video_url:
                 try:
-                    MinioClient.delete_object(f"public/{session.FK_user_id}/{session.video}")
+                    MinioClient.delete_object(
+                        f"public/{session.FK_user_id}/{session.video}"
+                    )
                 except Exception as e:
                     # Логирование или обработка исключения
                     pass
-            
+
             # Удаление самой сессии
             session.delete()
-    
-    delete_sessions_with_videos.short_description = "Удалить выбранные сессии и связанные с ними видео"
-    
+
+    delete_sessions_with_videos.short_description = (
+        "Удалить выбранные сессии и связанные с ними видео"
+    )
+
+
 class GameProxyAdmin(Game):
     class Meta:
         proxy = True
         verbose_name = _("тренажер")
         verbose_name_plural = _("Коллекции Тренажеров")
+
     def __str__(self):
-        return  ""
-    
+        return ""
+
+
 @admin.register(GameProxyAdmin)
 class GameAdmin(admin.ModelAdmin):
-    
     # form = AdminAdminForm
     inlines = [GameImageAdmin]
-    ordering = ("id", )
-    
-    actions = ['delete_selected']
-    
+    ordering = ("id",)
+
+    actions = ["delete_selected"]
+
     def delete_selected(self, request, queryset):
         self.model._meta.verbose_name = "Тренажер"
         # Implement your custom deletion logic here
@@ -216,31 +270,46 @@ class GameAdmin(admin.ModelAdmin):
         # This could be directly deleting the objects
         for obj in queryset:
             obj.delete()
+
     delete_selected.short_description = "Удалить выбранные тренажеры"
     fieldsets = (
-        (None, {'fields': ("name", "exe_name","version", "description", "file","use_tcp"),}),
+        (
+            None,
+            {
+                "fields": (
+                    "name",
+                    "exe_name",
+                    "version",
+                    "description",
+                    "file",
+                    "use_tcp",
+                ),
+            },
+        ),
     )
-    
-    def add_view(self, request, form_url='', extra_context=None):
+
+    def add_view(self, request, form_url="", extra_context=None):
         extra_context = extra_context or {}
-        extra_context['show_save_and_add_another'] = False
-        extra_context['show_save_and_continue'] = False
-        extra_context['show_save'] = True
+        extra_context["show_save_and_add_another"] = False
+        extra_context["show_save_and_continue"] = False
+        extra_context["show_save"] = True
         return super().add_view(request, form_url, extra_context=extra_context)
-    
-    def change_view(self, request, object_id, form_url='', extra_context=None):
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
-        extra_context['show_save_and_add_another'] = False
-        extra_context['show_save_and_continue'] = False
-        extra_context['show_save'] = True
+        extra_context["show_save_and_add_another"] = False
+        extra_context["show_save_and_continue"] = False
+        extra_context["show_save"] = True
         extra_context["history"] = False
-        return super().change_view(request, object_id, form_url, extra_context=extra_context)
-    
+        return super().change_view(
+            request, object_id, form_url, extra_context=extra_context
+        )
+
     # def has_view_permission(self, request, obj=None) -> bool:
     #     if request.user.position != User.POSITION_CHOICES[2][0]:
     #         return False
     #     return True
-    
+
     def has_change_permission(self, request, obj=None):
         if request.user.position != User.POSITION_CHOICES[2][0]:
             return False
@@ -250,35 +319,41 @@ class GameAdmin(admin.ModelAdmin):
         if request.user.position != User.POSITION_CHOICES[2][0]:
             return False
         return True
-    
+
     def has_add_permission(self, request: HttpRequest) -> bool:
         if request.user.position != User.POSITION_CHOICES[2][0]:
             return False
         return True
-    
+
     def download_obj_button(self, obj):
-
-        highlighted_text = f"<a href={obj.file.url} target='_blank' download>Скачать тренажер</a>"
+        highlighted_text = (
+            f"<a href={obj.file.url} target='_blank' download>Скачать тренажер</a>"
+        )
         return format_html(highlighted_text)
-    
-    download_obj_button.short_description = 'Действие'
 
-    
+    download_obj_button.short_description = "Действие"
+
     def get_list_display(self, request):
-         self.model._meta.verbose_name = "тренажера"
-         return ("object_id", "name", 'download_obj_button')
+        self.model._meta.verbose_name = "тренажера"
+        return ("object_id", "name", "download_obj_button")
+
     def save_model(self, request, obj, form, change):
         if change:  # Проверка, если это изменение существующего объекта
             original_obj = Game.objects.get(id=obj.id)
-            
+
             # Проверить, изменилась ли версия. Сравнение строк, так как теперь это TextField.
-            if original_obj.file != obj.file and original_obj.version.strip() == obj.version.strip():
+            if (
+                original_obj.file != obj.file
+                and original_obj.version.strip() == obj.version.strip()
+            ):
                 # Если файл и версия не изменились, выдать ошибку
-                raise ValidationError(_('Пожалуйста, обновите версию перед загрузкой обновленного файла.'))
+                raise ValidationError(
+                    _("Пожалуйста, обновите версию перед загрузкой обновленного файла.")
+                )
             if original_obj.file != obj.file:
                 file = Game.objects.get(pk=original_obj.id).file
                 MinioClient.delete_object(file.name)
-        
+
         # Продолжить сохранение, как обычно
         super().save_model(request, obj, form, change)
         # Загрузка изображения на S3
@@ -286,13 +361,13 @@ class GameAdmin(admin.ModelAdmin):
         #     game = Game.objects.get(pk = obj.id)
         # else:
         #     pass
-        
+
         # try:
         #     user = User.objects.get(id = obj.id)
         #     if user.profile_image != "" and obj.profile_image == "":
         #         MinioClient.delete_object(user.profile_image.name)
         #     elif user.profile_image != obj.profile_image:
-        #         MinioClient.delete_object(user.profile_image.name) 
+        #         MinioClient.delete_object(user.profile_image.name)
         # except:
         #     pass
         # self.model._meta.verbose_name = "Пользователь"
@@ -313,21 +388,20 @@ class GameAdmin(admin.ModelAdmin):
         # obj.is_administrator = True
         # obj.is_superuser = True
         # obj.fk_user = None
-        # obj.is_staff = True 
-        
-        #super().save_model(request, obj, form, change)
-    
+        # obj.is_staff = True
+
+        # super().save_model(request, obj, form, change)
+
     def object_id(self, obj):
         return convert_id_int_to_str(obj.id)
-    
+
     object_id.short_description = "ID"
-    
+
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         # form.base_fields['profile_image'].label = ''
         return form
-    
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs
-    

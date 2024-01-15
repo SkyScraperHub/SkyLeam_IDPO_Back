@@ -10,6 +10,7 @@ from django.utils.encoding import force_str
 from django.utils.html import format_html
 from rangefilter.filters import BaseRangeFilter, OnceCallMedia
 from django.utils.translation import gettext_lazy as _
+
 try:
     import pytz
 except ImportError:
@@ -22,6 +23,7 @@ import datetime
 
 import django
 
+
 class BaseIdFilter(BaseRangeFilter):
     _request_key = "DJANGO_RANGEFILTER_ADMIN_JS_LIST"
 
@@ -33,7 +35,9 @@ class BaseIdFilter(BaseRangeFilter):
             "system_name": force_str(
                 slugify(self.title) if slugify(self.title) else id(self.title)
             ),
-            "query_string": changelist.get_query_string({}, remove=self._get_expected_fields()),
+            "query_string": changelist.get_query_string(
+                {}, remove=self._get_expected_fields()
+            ),
         }
 
     def _get_expected_fields(self):
@@ -49,7 +53,6 @@ class BaseIdFilter(BaseRangeFilter):
         return query_params
 
     def get_template(self):
-    
         return "rangefilter/numeric_filter.html"
 
     template = property(get_template)
@@ -61,8 +64,7 @@ class BaseIdFilter(BaseRangeFilter):
                     self.lookup_kwarg_gte,
                     forms.IntegerField(
                         label="",
-                        widget=AdminIntegerFieldWidget(
-                            attrs={"placeholder": _("ID")}),
+                        widget=AdminIntegerFieldWidget(attrs={"placeholder": _("ID")}),
                         localize=True,
                         required=False,
                         initial=self.default_gte,
@@ -74,8 +76,9 @@ class BaseIdFilter(BaseRangeFilter):
     def _get_form_class(self):
         fields = self._get_form_fields()
 
-        form_class = type(str("DateRangeForm"), (forms.BaseForm,), {
-                          "base_fields": fields})
+        form_class = type(
+            str("DateRangeForm"), (forms.BaseForm,), {"base_fields": fields}
+        )
         if self.title == "id":
             self.title = "ID пользователя"
         # lines below ensure that the js static files are loaded just once
@@ -103,12 +106,14 @@ class IdFilter(BaseIdFilter):
                 return queryset.filter(id=validated_data["id__range__gte"])
         return queryset
 
+
 # Наследование от BaseIdFilter
 class UserIdFilter(BaseIdFilter):
     def queryset(self, request, queryset):
         if self.form.is_valid():
             validated_data = dict(self.form.cleaned_data.items())
             if validated_data:
-                return queryset.filter(FK_user_id=validated_data["FK_user_id__range__gte"])
+                return queryset.filter(
+                    FK_user_id=validated_data["FK_user_id__range__gte"]
+                )
         return queryset
-
